@@ -1,4 +1,4 @@
-package com.example.demo.models;
+package com.nancyImmo.bailleur.models;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.persistence.Column;

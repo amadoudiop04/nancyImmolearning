@@ -1,5 +1,8 @@
 ## How to run the project 
 
+
+faire un service et un dto
+
 ./mvnw spring-boot:run 
 
 ## sql file 

@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.nancyImmo.bailleur;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -12,10 +12,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @SpringBootApplication
-public class Main {
+public class nancyImmo {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Main.class, args);
+		SpringApplication.run(nancyImmo.class, args);
 	}
 
 	@Bean
