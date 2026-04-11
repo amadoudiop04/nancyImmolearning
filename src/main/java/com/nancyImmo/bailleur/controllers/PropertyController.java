@@ -1,4 +1,4 @@
-package com.nancyImmo.bailleur.routes;
+package com.nancyImmo.bailleur.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
-public class PropertyRoute {
+public class PropertyController {
 
     @Autowired
     private PropertyRepository propertyRepository;
