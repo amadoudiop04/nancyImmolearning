@@ -14,36 +14,36 @@ import com.nancyimmo.bailleur.models.BuildingModel;
 import com.nancyimmo.bailleur.repositories.BuildingRepository;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/buildings")
 public class BuildingController {
     @Autowired
     private BuildingRepository buildingRepository;
 
-    @PostMapping("/building")
+    @PostMapping()
     public BuildingModel addBuilding(@RequestBody BuildingModel building) {
         return buildingRepository.save(building);
     }
 
-    @GetMapping("/buildings")
+    @GetMapping()
     public Iterable<BuildingModel> getAllBuildings() {
         return buildingRepository.findAll();
     }
 
     // building by id
-    @GetMapping("/building/{id}")
+    @GetMapping("/{id}")
     public BuildingModel getBuilding(@PathVariable Long id) {
         return buildingRepository.findById(id).orElse(null);
     }
 
     // update building by id
-    @PutMapping("/building/{id}")
+    @PutMapping("/{id}")
     public BuildingModel updateBuilding(@PathVariable Long id, @RequestBody BuildingModel building) {
         building.setId(id);
         return buildingRepository.save(building);
     }
 
     // delete building by id
-    @DeleteMapping("/building/{id}")
+    @DeleteMapping("/{id}")
     public void deleteBuilding(@PathVariable Long id) {
         buildingRepository.deleteById(id);
     }

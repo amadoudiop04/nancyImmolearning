@@ -7,7 +7,7 @@ import com.nancyimmo.bailleur.dto.PropertyDto;
 import com.nancyimmo.bailleur.services.PropertyService;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/properties")
 public class PropertyController {
 
     private final PropertyService propertyService;
@@ -16,27 +16,27 @@ public class PropertyController {
         this.propertyService = propertyService;
     }
 
-    @PostMapping("/property")
+    @PostMapping()
     public PropertyDto create(@RequestBody PropertyDto dto) {
         return propertyService.create(dto);
     }
 
-    @GetMapping("/properties")
+    @GetMapping()
     public List<PropertyDto> getAll() {
         return propertyService.findAll();
     }
 
-    @GetMapping("/property/{id}")
+    @GetMapping("/{id}")
     public PropertyDto getOne(@PathVariable Long id) {
         return propertyService.findById(id);
     }
 
-    @PutMapping("/property/{id}")
+    @PutMapping("/{id}")
     public PropertyDto update(@PathVariable Long id, @RequestBody PropertyDto dto) {
         return propertyService.update(id, dto);
     }
 
-    @DeleteMapping("/property/{id}")
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         propertyService.delete(id);
     }
