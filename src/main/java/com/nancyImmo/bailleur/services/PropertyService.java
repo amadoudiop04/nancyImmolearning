@@ -17,13 +17,11 @@ public class PropertyService {
         this.propertyRepository = propertyRepository;
     }
 
-    // CREATE
     public PropertyDto create(PropertyDto dto) {
         PropertyModel model = toEntity(dto);
         return toDto(propertyRepository.save(model));
     }
 
-    // READ ALL
     public List<PropertyDto> findAll() {
         return propertyRepository.findAll()
                 .stream()
@@ -31,26 +29,22 @@ public class PropertyService {
                 .collect(Collectors.toList());
     }
 
-    // READ ONE
     public PropertyDto findById(Long id) {
         return propertyRepository.findById(id)
                 .map(this::toDto)
                 .orElse(null);
     }
 
-    // UPDATE
     public PropertyDto update(Long id, PropertyDto dto) {
         PropertyModel model = toEntity(dto);
         model.setId(id);
         return toDto(propertyRepository.save(model));
     }
 
-    // DELETE
     public void delete(Long id) {
         propertyRepository.deleteById(id);
     }
 
-    // 🔁 MAPPING
     private PropertyDto toDto(PropertyModel model) {
         return new PropertyDto(
                 model.getId(),

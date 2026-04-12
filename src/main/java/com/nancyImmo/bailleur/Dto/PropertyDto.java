@@ -7,7 +7,8 @@ public class PropertyDto {
     private String typeProperty;
     private float price;
 
-    public PropertyDto() {}
+    public PropertyDto() {
+    }
 
     public PropertyDto(Long id, String description, String typeProperty, float price) {
         this.id = id;
