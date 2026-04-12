@@ -1,4 +1,4 @@
-package com.nancyImmo.bailleur.controllers;
+package com.nancyimmo.bailleur.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -9,15 +9,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nancyImmo.bailleur.models.BuildingModel;
-import com.nancyImmo.bailleur.repositories.BuildingRepository;
+import com.nancyimmo.bailleur.models.BuildingModel;
+import com.nancyimmo.bailleur.repositories.BuildingRepository;
 
 @RestController
 public class BuildingController {
     @Autowired
     private BuildingRepository buildingRepository;
 
-    @PostMapping("/api/buildings")
+    @PostMapping("/api/building")
     public BuildingModel addBuilding(@RequestBody BuildingModel building) {
         return buildingRepository.save(building);
     }
@@ -28,20 +28,20 @@ public class BuildingController {
     }
 
     // building by id
-    @GetMapping("/api/buildings/{id}")
+    @GetMapping("/api/building/{id}")
     public BuildingModel getBuilding(@PathVariable Long id) {
         return buildingRepository.findById(id).orElse(null);
     }
 
     // update building by id
-    @PutMapping("/api/buildings/{id}")
+    @PutMapping("/api/building/{id}")
     public BuildingModel updateBuilding(@PathVariable Long id, @RequestBody BuildingModel building) {
         building.setId(id);
         return buildingRepository.save(building);
     }
 
     // delete building by id
-    @DeleteMapping("/api/buildings/{id}")
+    @DeleteMapping("/api/building/{id}")
     public void deleteBuilding(@PathVariable Long id) {
         buildingRepository.deleteById(id);
     }

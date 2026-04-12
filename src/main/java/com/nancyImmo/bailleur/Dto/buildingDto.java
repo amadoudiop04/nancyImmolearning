@@ -1,5 +1,5 @@
-package com.nancyImmo.bailleur.Dto;
+package com.nancyimmo.bailleur.dto;
 
-public class buildingDto {
+public class BuildingDto {
     
 }

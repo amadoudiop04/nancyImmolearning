@@ -1,4 +1,4 @@
-package com.nancyImmo.bailleur.models;
+package com.nancyimmo.bailleur.models;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -7,10 +7,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 @Entity
-    @Table(name = "building")
+@Table(name = "building")
 
 public class BuildingModel {
- 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
@@ -18,7 +18,7 @@ public class BuildingModel {
     private String name;
     private String street;
     private String city;
-    private String Zipcode;
+    private String zipcode;
     private String country;
 
     public Long getId() {
@@ -54,11 +54,11 @@ public class BuildingModel {
     }
 
     public String getZipcode() {
-        return Zipcode;
+        return zipcode;
     }
 
-    public void setZipcode(String Zipcode) {
-        this.Zipcode = Zipcode;
+    public void setZipcode(String zipcode) {
+        this.zipcode = zipcode;
     }
 
     public String getCountry() {

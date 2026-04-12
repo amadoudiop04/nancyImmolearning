@@ -1,54 +1,43 @@
-package com.nancyImmo.bailleur.controllers;
+package com.nancyimmo.bailleur.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
-import com.nancyImmo.bailleur.models.PropertyModel;
-import com.nancyImmo.bailleur.repositories.PropertyRepository;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-
+import com.nancyimmo.bailleur.dto.PropertyDto;
+import com.nancyimmo.bailleur.services.PropertyService;
 
 @RestController
+@RequestMapping("/api")
 public class PropertyController {
 
-    @Autowired
-    private PropertyRepository propertyRepository;
+    private final PropertyService propertyService;
 
-    @PostMapping("/api/property")
-    public PropertyModel addProperty(@RequestBody PropertyModel property) {
-        return propertyRepository.save(property);
+    public PropertyController(PropertyService propertyService) {
+        this.propertyService = propertyService;
     }
 
-    // all properties
-    @GetMapping("/api/property")
-    public Iterable<PropertyModel> getAllProperties() {
-        return propertyRepository.findAll();
+    @PostMapping("/property")
+    public PropertyDto create(@RequestBody PropertyDto dto) {
+        return propertyService.create(dto);
     }
 
-    // property by id
-    @GetMapping("/api/property/{id}")
-    public PropertyModel getProperty(@PathVariable Long id) {
-        return propertyRepository.findById(id).orElse(null);
-    }
-    
-    // update property by id
-    @PutMapping("/api/property/{id}")
-    public PropertyModel updateProperty(@PathVariable Long id, @RequestBody PropertyModel property) {
-        property.setId(id);
-        return propertyRepository.save(property);
+    @GetMapping("/properties")
+    public List<PropertyDto> getAll() {
+        return propertyService.findAll();
     }
 
-    // delete property by id
-    @DeleteMapping("/api/property/{id}")
-    public void deleteProperty(@PathVariable Long id) {
-        propertyRepository.deleteById(id);
+    @GetMapping("/property/{id}")
+    public PropertyDto getOne(@PathVariable Long id) {
+        return propertyService.findById(id);
     }
-    
+
+    @PutMapping("/property/{id}")
+    public PropertyDto update(@PathVariable Long id, @RequestBody PropertyDto dto) {
+        return propertyService.update(id, dto);
+    }
+
+    @DeleteMapping("/property/{id}")
+    public void delete(@PathVariable Long id) {
+        propertyService.delete(id);
+    }
 }
