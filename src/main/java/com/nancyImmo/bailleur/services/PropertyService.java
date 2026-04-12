@@ -56,8 +56,7 @@ public class PropertyService {
                 model.getId(),
                 model.getDescription(),
                 model.getTypeProperty(),
-                model.getPrice()
-        );
+                model.getPrice());
     }
 
     private PropertyModel toEntity(PropertyDto dto) {
