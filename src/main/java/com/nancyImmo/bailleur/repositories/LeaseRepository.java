@@ -7,5 +7,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 @Repository
 
 public interface LeaseRepository extends JpaRepository<LeaseModel, Long> {
-
 }

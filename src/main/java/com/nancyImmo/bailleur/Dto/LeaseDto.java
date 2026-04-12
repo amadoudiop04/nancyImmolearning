@@ -1,15 +1,24 @@
 package com.nancyimmo.bailleur.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 public class LeaseDto {
 
     private Long id;
-    private String startDate;
-    private String endDate;
-    private String rentAmount;
+    private LocalDate signatureDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal rentAmount;
     private String currency;
 
-    public LeaseDto(Long id, String startDate, String endDate, String rentAmount, String currency) {
+    public LeaseDto() {
+    }
+
+    public LeaseDto(Long id, LocalDate signatureDate, LocalDate startDate, LocalDate endDate, BigDecimal rentAmount,
+            String currency) {
         this.id = id;
+        this.signatureDate = signatureDate;
         this.startDate = startDate;
         this.endDate = endDate;
         this.rentAmount = rentAmount;
@@ -24,27 +33,35 @@ public class LeaseDto {
         this.id = id;
     }
 
-    public String getStartDate() {
+    public LocalDate getSignatureDate() {
+        return signatureDate;
+    }
+
+    public void setSignatureDate(LocalDate signatureDate) {
+        this.signatureDate = signatureDate;
+    }
+
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(String startDate) {
+    public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
 
-    public String getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(String endDate) {
+    public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
 
-    public String getRentAmount() {
+    public BigDecimal getRentAmount() {
         return rentAmount;
     }
 
-    public void setRentAmount(String rentAmount) {
+    public void setRentAmount(BigDecimal rentAmount) {
         this.rentAmount = rentAmount;
     }
 

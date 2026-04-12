@@ -1,5 +1,8 @@
 package com.nancyimmo.bailleur.models;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,10 +16,10 @@ public class LeaseModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String signatureDate;
-    private String startDate;
-    private String endDate;
-    private String rentAmount;
+    private LocalDate signatureDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal rentAmount;
     private String currency;
 
     public Long getId() {
@@ -27,35 +30,35 @@ public class LeaseModel {
         this.id = id;
     }
 
-    public String getSignatureDate() {
+    public LocalDate getSignatureDate() {
         return signatureDate;
     }
 
-    public void setSignatureDate(String signatureDate) {
+    public void setSignatureDate(LocalDate signatureDate) {
         this.signatureDate = signatureDate;
     }
 
-    public String getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(String startDate) {
+    public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
 
-    public String getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(String endDate) {
+    public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
 
-    public String getRentAmount() {
+    public BigDecimal getRentAmount() {
         return rentAmount;
     }
 
-    public void setRentAmount(String rentAmount) {
+    public void setRentAmount(BigDecimal rentAmount) {
         this.rentAmount = rentAmount;
     }
 

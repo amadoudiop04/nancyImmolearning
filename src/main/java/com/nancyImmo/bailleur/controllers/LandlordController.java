@@ -15,17 +15,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import com.nancyimmo.bailleur.dto.LandlordDto;
 import com.nancyimmo.bailleur.services.LandlordService;
 
-
-
 @RestController
 @RequestMapping("/api/landlords")
 public class LandlordController {
 
     private final LandlordService landlordService;
+
     public LandlordController(LandlordService landlordService) {
         this.landlordService = landlordService;
     }
-
 
     @PostMapping("")
     public LandlordDto create(@RequestBody LandlordDto landlordDto) {
@@ -37,7 +35,7 @@ public class LandlordController {
         return landlordService.findAll();
     }
 
-        @GetMapping("/{id}")
+    @GetMapping("/{id}")
     public LandlordDto getOne(@RequestParam Long id) {
         return landlordService.findById(id);
 
@@ -46,13 +44,11 @@ public class LandlordController {
     @PutMapping("/{id}")
     public LandlordDto update(@PathVariable Long id, @RequestBody LandlordDto landlordDto) {
         return landlordService.update(id, landlordDto);
-    }   
-
+    }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         landlordService.delete(id);
     }
-
 
 }

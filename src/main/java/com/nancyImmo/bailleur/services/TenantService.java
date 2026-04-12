@@ -8,20 +8,18 @@ import com.nancyimmo.bailleur.dto.TenantDto;
 import com.nancyimmo.bailleur.models.TenantModel;
 import java.util.stream.Collectors;
 
-
 @Service
 public class TenantService {
-    
-    private final TenantRepository tenantRepository;    
+
+    private final TenantRepository tenantRepository;
 
     public TenantService(TenantRepository tenantRepository) {
         this.tenantRepository = tenantRepository;
     }
 
-
     public TenantDto create(TenantModel tenant) {
         return toDto(tenantRepository.save(tenant));
-    }   
+    }
 
     public List<TenantDto> getAll() {
         return tenantRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());

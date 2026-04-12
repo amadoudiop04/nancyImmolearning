@@ -1,7 +1,7 @@
 package com.nancyimmo.bailleur.dto;
 
 public class TenantDto {
-    
+
     private Long id;
     private String firstName;
     private String lastName;
@@ -11,7 +11,6 @@ public class TenantDto {
     private String city;
     private String zipCode;
     private String country;
-
 
     public TenantDto(Long id, String firstName, String lastName, String email, int phoneNumber, String street,
             String city, String zipCode, String country) {
@@ -24,7 +23,7 @@ public class TenantDto {
         this.city = city;
         this.zipCode = zipCode;
         this.country = country;
-    }   
+    }
 
     public Long getId() {
         return id;
@@ -38,7 +37,6 @@ public class TenantDto {
         return firstName;
     }
 
-    
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
