@@ -8,16 +8,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 
 
 @Entity
-@Table(name = "building")
+@Table(name = "buildings")
 
 public class BuildingModel {
-
-    @OneToOne(mappedBy = "building")
-    private LandlordModel landlord;
 
     @OneToMany(mappedBy = "building")
     private List<PropertyModel> properties;

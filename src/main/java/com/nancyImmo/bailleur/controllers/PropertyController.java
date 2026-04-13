@@ -2,8 +2,10 @@ package com.nancyimmo.bailleur.controllers;
 
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
 
 import com.nancyimmo.bailleur.dto.PropertyDto;
+import com.nancyimmo.bailleur.dto.PropertyDetailsDto;
 import com.nancyimmo.bailleur.services.PropertyService;
 
 @RestController
@@ -26,9 +28,23 @@ public class PropertyController {
         return propertyService.findAll();
     }
 
+    @GetMapping("/details")
+    public List<PropertyDetailsDto> getAllWithDetails() {
+        return propertyService.findAllDetails();
+    }
+
     @GetMapping("/{id}")
     public PropertyDto getOne(@PathVariable Long id) {
         return propertyService.findById(id);
+    }
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<PropertyDetailsDto> getOneWithDetails(@PathVariable Long id) {
+        PropertyDetailsDto details = propertyService.findDetailsById(id);
+        if (details == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(details);
     }
 
     @PutMapping("/{id}")
