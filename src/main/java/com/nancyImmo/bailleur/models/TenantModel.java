@@ -4,12 +4,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tenants")
 
 public class TenantModel {
+
+
+    @OneToOne(mappedBy = "tenant")
+    private LeaseModel lease;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -94,6 +99,14 @@ public class TenantModel {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public LeaseModel getLease() {
+        return lease;
+    }
+
+    public void setLease(LeaseModel lease) {
+        this.lease = lease;
     }
 
 }

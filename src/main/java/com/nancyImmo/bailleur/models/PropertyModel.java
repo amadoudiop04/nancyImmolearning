@@ -6,11 +6,26 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+
 
 @Entity
 @Table(name = "properties")
 public class PropertyModel {
+
+    @OneToOne(mappedBy = "property")
+    private LeaseModel lease;
+
+    @ManyToOne
+    @JoinColumn(name = "building_id")
+    private BuildingModel building;
+
+    @ManyToOne
+    @JoinColumn(name = "landlord_id")
+    private LandlordModel landlord;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,4 +70,31 @@ public class PropertyModel {
     public void setPrice(float price) {
         this.price = price;
     }
+
+    public LeaseModel getLease() {
+        return lease;
+    }
+
+    public void setLease(LeaseModel lease) {
+        this.lease = lease;
+    }
+
+    public BuildingModel getBuilding() {
+        return building;
+    }
+
+    public void setBuilding(BuildingModel building) {
+        this.building = building;
+    }
+
+    public LandlordModel getLandlord() {
+        return landlord;
+    }
+
+    public void setLandlord(LandlordModel landlord) {
+        this.landlord = landlord;
+    }
+
+
+
 }

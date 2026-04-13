@@ -7,11 +7,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "leases")
 public class LeaseModel {
+
+    @OneToOne
+    @JoinColumn(name = "property_id", unique = true)
+    private PropertyModel property;
+
+    @OneToOne
+    @JoinColumn(name = "tenant_id", unique = true)
+    private TenantModel tenant;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,6 +78,22 @@ public class LeaseModel {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public PropertyModel getProperty() {
+        return property;
+    }
+
+    public void setProperty(PropertyModel property) {
+        this.property = property;
+    }
+
+    public TenantModel getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(TenantModel tenant) {
+        this.tenant = tenant;
     }
 
 }
