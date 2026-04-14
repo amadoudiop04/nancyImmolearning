@@ -6,9 +6,10 @@ import java.time.LocalDate;
 public class PropertyDetailsDto {
 
     private Long id;
-    private String description;
-    private String typeProperty;
-    private float price;
+    private String name;
+    private String size;
+    private String kind;
+    private String location;
     private BuildingInfo building;
     private LandlordInfo landlord;
     private LeaseInfo lease;
@@ -25,28 +26,36 @@ public class PropertyDetailsDto {
         this.id = id;
     }
 
-    public String getDescription() {
-        return description;
+    public String getName() {
+        return name;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getTypeProperty() {
-        return typeProperty;
+    public String getSize() {
+        return size;
     }
 
-    public void setTypeProperty(String typeProperty) {
-        this.typeProperty = typeProperty;
+    public void setSize(String size) {
+        this.size = size;
     }
 
-    public float getPrice() {
-        return price;
+    public String getKind() {
+        return kind;
     }
 
-    public void setPrice(float price) {
-        this.price = price;
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public BuildingInfo getBuilding() {
@@ -86,7 +95,7 @@ public class PropertyDetailsDto {
         private String name;
         private String street;
         private String city;
-        private String zipcode;
+        private String zipCode;
         private String country;
 
         public Long getId() {
@@ -121,12 +130,12 @@ public class PropertyDetailsDto {
             this.city = city;
         }
 
-        public String getZipcode() {
-            return zipcode;
+        public String getZipCode() {
+            return zipCode;
         }
 
-        public void setZipcode(String zipcode) {
-            this.zipcode = zipcode;
+        public void setZipCode(String zipCode) {
+            this.zipCode = zipCode;
         }
 
         public String getCountry() {
@@ -143,7 +152,7 @@ public class PropertyDetailsDto {
         private String firstName;
         private String lastName;
         private String email;
-        private int phoneNumber;
+        private int phone;
         private String street;
         private String city;
         private String zipCode;
@@ -181,12 +190,12 @@ public class PropertyDetailsDto {
             this.email = email;
         }
 
-        public int getPhoneNumber() {
-            return phoneNumber;
+        public int getPhone() {
+            return phone;
         }
 
-        public void setPhoneNumber(int phoneNumber) {
-            this.phoneNumber = phoneNumber;
+        public void setPhone(int phone) {
+            this.phone = phone;
         }
 
         public String getStreet() {
@@ -284,7 +293,7 @@ public class PropertyDetailsDto {
         private String firstName;
         private String lastName;
         private String email;
-        private int phoneNumber;
+        private int phone;
         private String street;
         private String city;
         private String zipCode;
@@ -322,12 +331,12 @@ public class PropertyDetailsDto {
             this.email = email;
         }
 
-        public int getPhoneNumber() {
-            return phoneNumber;
+        public int getPhone() {
+            return phone;
         }
 
-        public void setPhoneNumber(int phoneNumber) {
-            this.phoneNumber = phoneNumber;
+        public void setPhone(int phone) {
+            this.phone = phone;
         }
 
         public String getStreet() {

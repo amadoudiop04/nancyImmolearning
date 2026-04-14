@@ -1,32 +1,28 @@
-package com.nancyimmo.bailleur.models;
+package com.nancyimmo.bailleur.dto;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-
-
-@Entity
-@Table(name = "buildings")
-
-public class BuildingModel {
-
-    @OneToMany(mappedBy = "building")
-    private List<PropertyModel> properties;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class BuildingDto {
 
     private Long id;
     private String name;
     private String street;
     private String city;
-    private String zipcode;
+    @JsonAlias("zipcode")
+    private String zipCode;
     private String country;
+
+    public BuildingDto() {
+    }
+
+    public BuildingDto(Long id, String name, String street, String city, String zipCode, String country) {
+        this.id = id;
+        this.name = name;
+        this.street = street;
+        this.city = city;
+        this.zipCode = zipCode;
+        this.country = country;
+    }
 
     public Long getId() {
         return id;
@@ -60,12 +56,12 @@ public class BuildingModel {
         this.city = city;
     }
 
-    public String getZipcode() {
-        return zipcode;
+    public String getZipCode() {
+        return zipCode;
     }
 
-    public void setZipcode(String zipcode) {
-        this.zipcode = zipcode;
+    public void setZipCode(String zipCode) {
+        this.zipCode = zipCode;
     }
 
     public String getCountry() {

@@ -66,26 +66,29 @@ public class PropertyService {
     private PropertyDto toDto(PropertyModel model) {
         return new PropertyDto(
                 model.getId(),
-                model.getDescription(),
-                model.getTypeProperty(),
-                model.getPrice());
+                model.getName(),
+                model.getSize(),
+                model.getKind(),
+                model.getLocation());
     }
 
     private PropertyModel toEntity(PropertyDto dto) {
         PropertyModel model = new PropertyModel();
         model.setId(dto.getId());
-        model.setDescription(dto.getDescription());
-        model.setTypeProperty(dto.getTypeProperty());
-        model.setPrice(dto.getPrice());
+        model.setName(dto.getName());
+        model.setSize(dto.getSize());
+        model.setKind(dto.getKind());
+        model.setLocation(dto.getLocation());
         return model;
     }
 
     private PropertyDetailsDto toDetailsDto(PropertyModel model) {
         PropertyDetailsDto dto = new PropertyDetailsDto();
         dto.setId(model.getId());
-        dto.setDescription(model.getDescription());
-        dto.setTypeProperty(model.getTypeProperty());
-        dto.setPrice(model.getPrice());
+        dto.setName(model.getName());
+        dto.setSize(model.getSize());
+        dto.setKind(model.getKind());
+        dto.setLocation(model.getLocation());
 
         dto.setBuilding(toBuildingInfo(model.getBuilding()));
         dto.setLandlord(toLandlordInfo(model.getLandlord()));
@@ -107,7 +110,7 @@ public class PropertyService {
         dto.setName(model.getName());
         dto.setStreet(model.getStreet());
         dto.setCity(model.getCity());
-        dto.setZipcode(model.getZipcode());
+        dto.setZipCode(model.getZipCode());
         dto.setCountry(model.getCountry());
         return dto;
     }
@@ -122,7 +125,7 @@ public class PropertyService {
         dto.setFirstName(model.getFirstName());
         dto.setLastName(model.getLastName());
         dto.setEmail(model.getEmail());
-        dto.setPhoneNumber(model.getPhoneNumber());
+        dto.setPhone(model.getPhone());
         dto.setStreet(model.getStreet());
         dto.setCity(model.getCity());
         dto.setZipCode(model.getZipCode());
@@ -155,7 +158,7 @@ public class PropertyService {
         dto.setFirstName(model.getFirstName());
         dto.setLastName(model.getLastName());
         dto.setEmail(model.getEmail());
-        dto.setPhoneNumber(model.getPhoneNumber());
+        dto.setPhone(model.getPhone());
         dto.setStreet(model.getStreet());
         dto.setCity(model.getCity());
         dto.setZipCode(model.getZipCode());

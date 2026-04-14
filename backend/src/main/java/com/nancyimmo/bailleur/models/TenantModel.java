@@ -1,5 +1,6 @@
 package com.nancyimmo.bailleur.models;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,19 +10,23 @@ import jakarta.persistence.Table;
 import java.util.List;
 
 @Entity
-@Table(name = "landlords")
-public class LandlordModel {
+@Table(name = "tenants")
 
-    @OneToMany(mappedBy = "landlord")
-    private List<PropertyModel> properties;
+public class TenantModel {
+
+
+    @OneToMany(mappedBy = "tenant")
+    private List<LeaseModel> leases;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long id;
     private String firstName;
     private String lastName;
     private String email;
-    private int phoneNumber;
+    @Column(name = "phone_number")
+    private int phone;
     private String street;
     private String city;
     private String zipCode;
@@ -59,12 +64,12 @@ public class LandlordModel {
         this.email = email;
     }
 
-    public int getPhoneNumber() {
-        return phoneNumber;
+    public int getPhone() {
+        return phone;
     }
 
-    public void setPhoneNumber(int phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhone(int phone) {
+        this.phone = phone;
     }
 
     public String getStreet() {
@@ -97,6 +102,14 @@ public class LandlordModel {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public List<LeaseModel> getLeases() {
+        return leases;
+    }
+
+    public void setLeases(List<LeaseModel> leases) {
+        this.leases = leases;
     }
 
 }

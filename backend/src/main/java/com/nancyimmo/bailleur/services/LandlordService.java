@@ -48,7 +48,7 @@ public class LandlordService {
                 model.getFirstName(),
                 model.getLastName(),
                 model.getEmail(),
-                model.getPhoneNumber(),
+            model.getPhone(),
                 model.getStreet(),
                 model.getCity(),
                 model.getZipCode(),
@@ -60,7 +60,7 @@ public class LandlordService {
         model.setFirstName(dto.getFirstName());
         model.setLastName(dto.getLastName());
         model.setEmail(dto.getEmail());
-        model.setPhoneNumber(dto.getPhoneNumber());
+        model.setPhone(dto.getPhone());
         model.setStreet(dto.getStreet());
         model.setCity(dto.getCity());
         model.setZipCode(dto.getZipCode());

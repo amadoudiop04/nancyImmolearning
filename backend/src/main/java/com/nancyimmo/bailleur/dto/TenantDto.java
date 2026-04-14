@@ -6,19 +6,22 @@ public class TenantDto {
     private String firstName;
     private String lastName;
     private String email;
-    private int phoneNumber;
+    private int phone;
     private String street;
     private String city;
     private String zipCode;
     private String country;
 
-    public TenantDto(Long id, String firstName, String lastName, String email, int phoneNumber, String street,
+    public TenantDto() {
+    }
+
+    public TenantDto(Long id, String firstName, String lastName, String email, int phone, String street,
             String city, String zipCode, String country) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.phoneNumber = phoneNumber;
+        this.phone = phone;
         this.street = street;
         this.city = city;
         this.zipCode = zipCode;
@@ -57,12 +60,12 @@ public class TenantDto {
         this.email = email;
     }
 
-    public int getPhoneNumber() {
-        return phoneNumber;
+    public int getPhone() {
+        return phone;
     }
 
-    public void setPhoneNumber(int phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhone(int phone) {
+        this.phone = phone;
     }
 
     public String getStreet() {

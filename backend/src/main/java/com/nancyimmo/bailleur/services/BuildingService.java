@@ -52,7 +52,7 @@ public class BuildingService {
                 model.getName(),
                 model.getStreet(),
                 model.getCity(),
-                model.getZipcode(),
+                model.getZipCode(),
                 model.getCountry());
     }
 
@@ -64,7 +64,7 @@ public class BuildingService {
         model.setName(dto.getName());
         model.setStreet(dto.getStreet());
         model.setCity(dto.getCity());
-        model.setZipcode(dto.getZipcode());
+        model.setZipCode(dto.getZipCode());
         model.setCountry(dto.getCountry());
         return model;
     }

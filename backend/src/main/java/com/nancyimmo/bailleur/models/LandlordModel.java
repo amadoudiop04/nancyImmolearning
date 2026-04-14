@@ -1,30 +1,33 @@
-package com.nancyimmo.bailleur.dto;
+package com.nancyimmo.bailleur.models;
 
-public class LandlordDto {
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import java.util.List;
 
+@Entity
+@Table(name = "landlords")
+public class LandlordModel {
+
+    @OneToMany(mappedBy = "landlord")
+    private List<PropertyModel> properties;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String firstName;
     private String lastName;
     private String email;
-    private int phoneNumber;
+    @Column(name = "phone_number")
+    private int phone;
     private String street;
     private String city;
     private String zipCode;
     private String country;
-
-    public LandlordDto(Long id, String firstName, String lastName, String email, int phoneNumber, String street,
-            String city,
-            String zipCode, String country) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.phoneNumber = phoneNumber;
-        this.street = street;
-        this.city = city;
-        this.zipCode = zipCode;
-        this.country = country;
-    }
 
     public Long getId() {
         return id;
@@ -58,12 +61,12 @@ public class LandlordDto {
         this.email = email;
     }
 
-    public int getPhoneNumber() {
-        return phoneNumber;
+    public int getPhone() {
+        return phone;
     }
 
-    public void setPhoneNumber(int phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhone(int phone) {
+        this.phone = phone;
     }
 
     public String getStreet() {

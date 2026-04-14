@@ -1,7 +1,5 @@
 package com.nancyimmo.bailleur.models;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,13 +29,10 @@ public class PropertyModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String description;
-
-    @JsonAlias("type_property")
-    @Column(name = "type_property")
-    private String typeProperty;
-
-    private float price;
+    private String name;
+    private String size;
+    private String kind;
+    private String location;
 
     public Long getId() {
         return id;
@@ -47,28 +42,36 @@ public class PropertyModel {
         this.id = id;
     }
 
-    public String getDescription() {
-        return description;
+    public String getName() {
+        return name;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getTypeProperty() {
-        return typeProperty;
+    public String getSize() {
+        return size;
     }
 
-    public void setTypeProperty(String typeProperty) {
-        this.typeProperty = typeProperty;
+    public void setSize(String size) {
+        this.size = size;
     }
 
-    public float getPrice() {
-        return price;
+    public String getKind() {
+        return kind;
     }
 
-    public void setPrice(float price) {
-        this.price = price;
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public LeaseModel getLease() {

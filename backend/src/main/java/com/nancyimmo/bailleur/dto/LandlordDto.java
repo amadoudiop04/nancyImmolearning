@@ -1,33 +1,33 @@
-package com.nancyimmo.bailleur.models;
+package com.nancyimmo.bailleur.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-
-@Entity
-@Table(name = "tenants")
-
-public class TenantModel {
-
-
-    @OneToOne(mappedBy = "tenant")
-    private LeaseModel lease;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class LandlordDto {
 
     private Long id;
     private String firstName;
     private String lastName;
     private String email;
-    private int phoneNumber;
+    private int phone;
     private String street;
     private String city;
     private String zipCode;
     private String country;
+
+    public LandlordDto() {
+    }
+
+    public LandlordDto(Long id, String firstName, String lastName, String email, int phone, String street,
+            String city,
+            String zipCode, String country) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
+        this.street = street;
+        this.city = city;
+        this.zipCode = zipCode;
+        this.country = country;
+    }
 
     public Long getId() {
         return id;
@@ -61,12 +61,12 @@ public class TenantModel {
         this.email = email;
     }
 
-    public int getPhoneNumber() {
-        return phoneNumber;
+    public int getPhone() {
+        return phone;
     }
 
-    public void setPhoneNumber(int phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhone(int phone) {
+        this.phone = phone;
     }
 
     public String getStreet() {
@@ -99,14 +99,6 @@ public class TenantModel {
 
     public void setCountry(String country) {
         this.country = country;
-    }
-
-    public LeaseModel getLease() {
-        return lease;
-    }
-
-    public void setLease(LeaseModel lease) {
-        this.lease = lease;
     }
 
 }
