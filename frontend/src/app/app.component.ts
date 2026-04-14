@@ -6,6 +6,8 @@ import { SiteLayoutComponent } from './layout/layout.component';
   selector: 'app-root',
   standalone: true,
   imports: [SiteLayoutComponent],
-  template: '<app-site-layout />'
+  template: `
+    <app-site-layout />
+  `
 })
 export class AppComponent {}

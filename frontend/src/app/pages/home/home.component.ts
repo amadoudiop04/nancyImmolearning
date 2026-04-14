@@ -1,65 +1,282 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+import { ApiService, Building } from '../../services/api.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <section class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-10 py-6 sm:py-10">
-      <div class="rounded-3xl bg-white shadow-xl shadow-slate-900/10 ring-1 ring-slate-200 p-6 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
-        <div class="lg:col-span-7">
-          <p class="text-xs font-extrabold tracking-[0.22em] uppercase text-orange-700 mb-3">Application de gestion immobiliere</p>
-          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black leading-[0.95] text-slate-900 mb-4">Une base d'accueil simple, propre et prete a evoluer.</h1>
-          <p class="text-slate-600 leading-7 max-w-2xl mb-6">
-          Cette page pose les fondations du frontend Nancy Immo avec une architecture claire,
-          un style moderne et une structure facile a etendre.
-        </p>
-
-          <div class="flex flex-wrap items-center gap-3">
-            <a class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-red-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/25 hover:brightness-105" href="#services">Decouvrir les services</a>
-            <a class="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-800 hover:bg-slate-100" href="#contact">Contacter l'equipe</a>
+      <div class="rounded-3xl bg-white shadow-xl shadow-slate-900/10 ring-1 ring-slate-200 p-6 sm:p-10">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="text-xs font-extrabold tracking-[0.22em] uppercase text-orange-700 mb-3">
+              Application de gestion immobiliere
+            </p>
+            <h1 class="text-4xl sm:text-5xl font-black leading-[0.95] text-slate-900">
+              Buildings
+            </h1>
+            <p class="mt-3 text-slate-600 leading-7 max-w-2xl">
+              Cette page charge les données retournées par votre API Spring Boot et les affiche directement.
+            </p>
           </div>
+
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-green-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-blue-500/25 hover:brightness-105"
+            (click)="loadBuildings()"
+          >
+            Rafraîchir
+          </button>
         </div>
 
-        
-      </div>
+        <div class="mt-6 grid gap-6 lg:grid-cols-2">
+          <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Ajouter un building</h2>
 
-      <section class="mt-6" id="services">
-        <div class="mb-4">
-          <p class="text-xs font-extrabold tracking-[0.22em] uppercase text-orange-700 mb-2">Services</p>
-          <h2 class="text-2xl sm:text-4xl font-black text-slate-900">Les blocs essentiels sont deja penses pour le projet.</h2>
-      </div>
+            <form class="grid gap-3" (ngSubmit)="addBuilding()">
+              <input
+                [(ngModel)]="newBuilding.name"
+                name="name"
+                type="text"
+                placeholder="Nom"
+                class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+              />
+              <input
+                [(ngModel)]="newBuilding.street"
+                name="street"
+                type="text"
+                placeholder="Rue"
+                class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+              />
+              <input
+                [(ngModel)]="newBuilding.city"
+                name="city"
+                type="text"
+                placeholder="Ville"
+                class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+              />
+              <input
+                [(ngModel)]="newBuilding.zipCode"
+                name="zipCode"
+                type="text"
+                placeholder="Code postal"
+                class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+              />
+              <input
+                [(ngModel)]="newBuilding.country"
+                name="country"
+                type="text"
+                placeholder="Pays"
+                class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+              />
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <article class="rounded-2xl bg-white p-5 ring-1 ring-slate-200 shadow-md shadow-slate-900/5" *ngFor="let feature of features">
-            <h3 class="text-lg font-bold text-slate-900 mb-2">{{ feature.title }}</h3>
-            <p class="text-slate-600 leading-7">{{ feature.description }}</p>
-        </article>
+              <button
+                type="submit"
+                class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-teal-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-green-500/25 hover:brightness-105"
+              >
+                Ajouter
+              </button>
+            </form>
+          </div>
+
+          <div class="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Buildings enregistrés</h2>
+
+          <p *ngIf="isLoading" class="text-slate-600">Chargement des buildings...</p>
+          <p *ngIf="errorMessage" class="text-red-600">{{ errorMessage }}</p>
+
+          <ng-container *ngIf="!isLoading && !errorMessage">
+            <ul *ngIf="buildings.length > 0; else emptyState" class="space-y-3">
+              <li *ngFor="let building of buildings" class="rounded-xl border border-slate-200 bg-white p-4">
+                <ng-container *ngIf="editingBuildingId !== building.id; else editTemplate">
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p class="font-semibold text-slate-900">{{ building.name }}</p>
+                      <p class="text-sm text-slate-600">
+                        {{ building.street }}, {{ building.zipCode }} {{ building.city }}, {{ building.country }}
+                      </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                        (click)="startEdit(building)"
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-full bg-gradient-to-r from-red-500 to-pink-600 px-3 py-1.5 text-sm font-semibold text-white hover:brightness-105"
+                        (click)="deleteBuilding(building.id)"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <ng-template #editTemplate>
+                  <div class="grid gap-3">
+                    <input
+                      [(ngModel)]="editingBuilding.name"
+                      name="editingName"
+                      type="text"
+                      class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+                    />
+                    <input
+                      [(ngModel)]="editingBuilding.street"
+                      name="editingStreet"
+                      type="text"
+                      class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+                    />
+                    <input
+                      [(ngModel)]="editingBuilding.city"
+                      name="editingCity"
+                      type="text"
+                      class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+                    />
+                    <input
+                      [(ngModel)]="editingBuilding.zipCode"
+                      name="editingZipCode"
+                      type="text"
+                      class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+                    />
+                    <input
+                      [(ngModel)]="editingBuilding.country"
+                      name="editingCountry"
+                      type="text"
+                      class="rounded-xl border border-slate-300 px-4 py-3 focus:border-orange-500 focus:outline-none"
+                    />
+
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:brightness-105"
+                        (click)="saveEdit()"
+                      >
+                        Enregistrer
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                        (click)="cancelEdit()"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                </ng-template>
+              </li>
+            </ul>
+
+            <ng-template #emptyState>
+              <p class="text-slate-500">Aucun building trouvé.</p>
+            </ng-template>
+          </ng-container>
+          </div>
+        </div>
       </div>
-      </section>
     </section>
   `,
 })
-export class HomeComponent {
-  readonly stats = [
-    { value: '100%', label: 'Vue centralisée des biens' },
-    { value: '3', label: 'Modules clés prêts à brancher' },
-    { value: '1', label: 'Base claire pour évoluer' }
-  ];
+export class HomeComponent implements OnInit {
+  buildings: Building[] = [];
+  isLoading = false;
+  errorMessage = '';
+  editingBuildingId: number | null = null;
+  editingBuilding: Omit<Building, 'id'> = this.emptyBuilding();
+  newBuilding: Omit<Building, 'id'> = this.emptyBuilding();
 
-  readonly features = [
-    {
-      title: 'Suivi des biens',
-      description: 'Organisez vos immeubles, logements et propriétaires dans une structure simple et lisible.'
-    },
-    {
-      title: 'Gestion des baux',
-      description: 'Préparez le terrain pour suivre les contrats, les dates importantes et les états.'
-    },
-    {
-      title: 'Architecture propre',
-      description: 'Séparation nette entre layout, pages et données pour faciliter la maintenance.'
+  constructor(private apiService: ApiService) {}
+
+  ngOnInit(): void {
+    this.loadBuildings();
+  }
+
+  loadBuildings(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.apiService.getBuildings().subscribe({
+      next: (data) => {
+        this.buildings = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching buildings:', error);
+        this.errorMessage = 'Impossible de charger les buildings.';
+        this.isLoading = false;
+      },
+    });
+  }
+
+  addBuilding(): void {
+    this.apiService.addBuilding(this.newBuilding).subscribe({
+      next: () => {
+        this.newBuilding = this.emptyBuilding();
+        this.loadBuildings();
+      },
+      error: (error) => {
+        console.error('Error adding building:', error);
+        this.errorMessage = 'Impossible dajouter le building.';
+      },
+    });
+  }
+
+  startEdit(building: Building): void {
+    this.editingBuildingId = building.id;
+    this.editingBuilding = {
+      name: building.name,
+      street: building.street,
+      city: building.city,
+      zipCode: building.zipCode,
+      country: building.country,
+    };
+  }
+
+  cancelEdit(): void {
+    this.editingBuildingId = null;
+    this.editingBuilding = this.emptyBuilding();
+  }
+
+  saveEdit(): void {
+    if (this.editingBuildingId === null) {
+      return;
     }
-  ];
+
+    this.apiService.modifyBuilding(this.editingBuildingId, this.editingBuilding).subscribe({
+      next: () => {
+        this.cancelEdit();
+        this.loadBuildings();
+      },
+      error: (error) => {
+        console.error('Error updating building:', error);
+        this.errorMessage = 'Impossible de modifier le building.';
+      },
+    });
+  }
+
+  deleteBuilding(id: number): void {
+    this.apiService.deleteBuilding(id).subscribe({
+      next: () => this.loadBuildings(),
+      error: (error) => {
+        console.error('Error deleting building:', error);
+        this.errorMessage = 'Impossible de supprimer le building.';
+      },
+    });
+  }
+
+  private emptyBuilding(): Omit<Building, 'id'> {
+    return {
+      name: '',
+      street: '',
+      city: '',
+      zipCode: '',
+      country: '',
+    };
+  }
 }
