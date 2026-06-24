@@ -10,7 +10,6 @@ import com.nancyimmo.bailleur.dto.PropertyDetailsDto;
 import com.nancyimmo.bailleur.services.PropertyService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/dashboard")
 public class DashboardController {
 

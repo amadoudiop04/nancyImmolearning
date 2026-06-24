@@ -22,6 +22,10 @@ import { ApiService, PropertyDetails, Document, Lease, Tenant } from '../../../s
             <h1 style="margin:18px 0 4px;font-size:26px;font-weight:800;letter-spacing:-0.02em;">{{ property.name }}</h1>
             <div style="font-size:14px;color:#8A938E;">{{ property.location }}</div>
 
+            @if (property.description) {
+              <p style="margin:14px 0 0;font-size:14px;color:#5A655F;line-height:1.6;">{{ property.description }}</p>
+            }
+
             <div style="display:flex;gap:10px;margin-top:16px;">
               <div style="flex:1;background:#fff;border:1px solid #E4E7E2;border-radius:13px;padding:15px;">
                 <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:#9AA49E;">Type</div>

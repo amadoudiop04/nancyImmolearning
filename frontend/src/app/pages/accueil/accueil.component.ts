@@ -82,13 +82,27 @@ import { ApiService, DashboardStats } from '../../services/api.service';
           <p style="font-size:16px;color:#5A655F;margin:12px 0 0;">Une plateforme complète, côté bailleur comme côté locataire.</p>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
-          @for (feat of features; track feat.title) {
-            <div style="background:#fff;border:1px solid #E4E7E2;border-radius:18px;padding:26px;">
-              <div style="width:46px;height:46px;border-radius:13px;background:#E7F1EF;display:flex;align-items:center;justify-content:center;margin-bottom:16px;" [innerHTML]="feat.icon"></div>
-              <div style="font-size:18px;font-weight:700;">{{ feat.title }}</div>
-              <p style="font-size:14px;color:#5A655F;line-height:1.6;margin:9px 0 0;">{{ feat.desc }}</p>
+          <div style="background:#fff;border:1px solid #E4E7E2;border-radius:18px;padding:26px;">
+            <div style="width:46px;height:46px;border-radius:13px;background:#E7F1EF;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11l8-6.5L20 11v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5z" stroke="#0E4F4A" stroke-width="1.7" stroke-linejoin="round"/></svg>
             </div>
-          }
+            <div style="font-size:18px;font-weight:700;">Gestion des biens</div>
+            <p style="font-size:14px;color:#5A655F;line-height:1.6;margin:9px 0 0;">Centralisez photos, descriptifs, documents légaux et historique de chaque logement.</p>
+          </div>
+          <div style="background:#fff;border:1px solid #E4E7E2;border-radius:18px;padding:26px;">
+            <div style="width:46px;height:46px;border-radius:13px;background:#E7F1EF;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="#0E4F4A" stroke-width="1.7"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#0E4F4A" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </div>
+            <div style="font-size:18px;font-weight:700;">Suivi des locataires</div>
+            <p style="font-size:14px;color:#5A655F;line-height:1.6;margin:9px 0 0;">Baux, paiements, communication directe et candidatures réunis au même endroit.</p>
+          </div>
+          <div style="background:#fff;border:1px solid #E4E7E2;border-radius:18px;padding:26px;">
+            <div style="width:46px;height:46px;border-radius:13px;background:#E7F1EF;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="18" height="13" rx="2" stroke="#0E4F4A" stroke-width="1.7"/><path d="M3 9.5h18" stroke="#0E4F4A" stroke-width="1.7"/></svg>
+            </div>
+            <div style="font-size:18px;font-weight:700;">Paiements & quittances</div>
+            <p style="font-size:14px;color:#5A655F;line-height:1.6;margin:9px 0 0;">Encaissez les loyers en ligne et générez les quittances automatiquement chaque mois.</p>
+          </div>
         </div>
       </section>
 
@@ -119,24 +133,6 @@ import { ApiService, DashboardStats } from '../../services/api.service';
 export class AccueilComponent implements OnInit {
   stats: DashboardStats | null = null;
   barHeights = [46, 62, 54, 74, 66, 88, 100];
-
-  features = [
-    {
-      title: 'Gestion des biens',
-      desc: 'Centralisez photos, descriptifs, documents légaux et historique de chaque logement.',
-      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11l8-6.5L20 11v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5z" stroke="#0E4F4A" stroke-width="1.7" stroke-linejoin="round"/></svg>'
-    },
-    {
-      title: 'Suivi des locataires',
-      desc: 'Baux, paiements, communication directe et candidatures réunis au même endroit.',
-      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="#0E4F4A" stroke-width="1.7"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#0E4F4A" stroke-width="1.7" stroke-linecap="round"/></svg>'
-    },
-    {
-      title: 'Paiements & quittances',
-      desc: 'Encaissez les loyers en ligne et générez les quittances automatiquement chaque mois.',
-      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="18" height="13" rx="2" stroke="#0E4F4A" stroke-width="1.7"/><path d="M3 9.5h18" stroke="#0E4F4A" stroke-width="1.7"/></svg>'
-    }
-  ];
 
   get revenueLabel(): string {
     if (!this.stats) return '—';

@@ -8,7 +8,6 @@ import com.nancyimmo.bailleur.dto.DocumentDto;
 import com.nancyimmo.bailleur.services.DocumentService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/documents")
 public class DocumentController {
 
@@ -21,6 +20,11 @@ public class DocumentController {
     @PostMapping
     public DocumentDto create(@RequestBody DocumentDto dto) {
         return documentService.create(dto);
+    }
+
+    @PostMapping("/generate-quittances")
+    public List<DocumentDto> generateQuittances() {
+        return documentService.generateQuittances();
     }
 
     @GetMapping

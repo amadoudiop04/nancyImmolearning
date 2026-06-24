@@ -1,6 +1,8 @@
 package com.nancyimmo.bailleur.services;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,7 +10,9 @@ import org.springframework.stereotype.Service;
 
 import com.nancyimmo.bailleur.dto.DocumentDto;
 import com.nancyimmo.bailleur.models.DocumentModel;
+import com.nancyimmo.bailleur.models.LeaseModel;
 import com.nancyimmo.bailleur.repositories.DocumentRepository;
+import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.PropertyRepository;
 import com.nancyimmo.bailleur.repositories.TenantRepository;
 
@@ -18,13 +22,46 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final PropertyRepository propertyRepository;
     private final TenantRepository tenantRepository;
+    private final LeaseRepository leaseRepository;
 
     public DocumentService(DocumentRepository documentRepository,
             PropertyRepository propertyRepository,
-            TenantRepository tenantRepository) {
+            TenantRepository tenantRepository,
+            LeaseRepository leaseRepository) {
         this.documentRepository = documentRepository;
         this.propertyRepository = propertyRepository;
         this.tenantRepository = tenantRepository;
+        this.leaseRepository = leaseRepository;
+    }
+
+    /**
+     * Génère automatiquement une quittance (document) pour le mois courant
+     * pour chaque bail actif possédant un locataire. Idempotent : ne recrée
+     * pas une quittance déjà présente pour le même bien et le même mois.
+     */
+    public List<DocumentDto> generateQuittances() {
+        String monthLabel = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/yyyy"));
+        List<DocumentDto> created = new ArrayList<>();
+
+        for (LeaseModel lease : leaseRepository.findAll()) {
+            if (lease.getProperty() == null || lease.getTenant() == null) {
+                continue;
+            }
+            String name = "Quittance - " + lease.getProperty().getName() + " - " + monthLabel;
+            boolean exists = documentRepository.findByPropertyId(lease.getProperty().getId()).stream()
+                    .anyMatch(d -> name.equals(d.getName()));
+            if (exists) {
+                continue;
+            }
+            DocumentModel doc = new DocumentModel();
+            doc.setName(name);
+            doc.setDocType("QUITTANCE");
+            doc.setCreatedAt(LocalDate.now());
+            doc.setProperty(lease.getProperty());
+            doc.setTenant(lease.getTenant());
+            created.add(toDto(documentRepository.save(doc)));
+        }
+        return created;
     }
 
     public DocumentDto create(DocumentDto dto) {

@@ -13,10 +13,10 @@ export interface Landlord {
 }
 export interface Property {
   id: number; name: string; size: string; kind: string; location: string;
-  buildingId?: number; landlordId?: number;
+  description?: string; rent?: number; buildingId?: number; landlordId?: number;
 }
 export interface PropertyDetails {
-  id: number; name: string; size: string; kind: string; location: string;
+  id: number; name: string; size: string; kind: string; location: string; description?: string; rent?: number;
   building?: { id: number; name: string; street: string; city: string; zipCode: string; country: string };
   landlord?: { id: number; firstName: string; lastName: string; email: string; phone: number };
   lease?: { id: number; startDate: string; endDate: string; rentAmount: number; currency: string };
@@ -110,6 +110,7 @@ export class ApiService {
   }
   createDocument(d: Omit<Document, 'id'>): Observable<Document> { return this.http.post<Document>(`${this.api}/documents`, d); }
   deleteDocument(id: number): Observable<void> { return this.http.delete<void>(`${this.api}/documents/${id}`); }
+  generateQuittances(): Observable<Document[]> { return this.http.post<Document[]>(`${this.api}/documents/generate-quittances`, {}); }
 
   // Dashboard
   getDashboardStats(): Observable<DashboardStats> { return this.http.get<DashboardStats>(`${this.api}/dashboard`); }

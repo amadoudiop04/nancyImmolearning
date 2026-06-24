@@ -81,6 +81,10 @@ public class PropertyService {
                     existing.setSize(dto.getSize());
                     existing.setKind(dto.getKind());
                     existing.setLocation(dto.getLocation());
+                    existing.setRent(dto.getRent());
+                    if (dto.getDescription() != null) {
+                        existing.setDescription(dto.getDescription());
+                    }
                     if (dto.getBuildingId() != null) {
                         buildingRepository.findById(dto.getBuildingId()).ifPresent(existing::setBuilding);
                     }
@@ -103,6 +107,8 @@ public class PropertyService {
                 model.getSize(),
                 model.getKind(),
                 model.getLocation());
+        dto.setDescription(model.getDescription());
+        dto.setRent(model.getRent());
         dto.setBuildingId(model.getBuilding() != null ? model.getBuilding().getId() : null);
         dto.setLandlordId(model.getLandlord() != null ? model.getLandlord().getId() : null);
         return dto;
@@ -115,6 +121,9 @@ public class PropertyService {
         model.setSize(dto.getSize());
         model.setKind(dto.getKind());
         model.setLocation(dto.getLocation());
+        // La colonne "description" existante est NOT NULL : on garantit une valeur non nulle.
+        model.setDescription(dto.getDescription() != null ? dto.getDescription() : "");
+        model.setRent(dto.getRent());
         return model;
     }
 
@@ -125,6 +134,8 @@ public class PropertyService {
         dto.setSize(model.getSize());
         dto.setKind(model.getKind());
         dto.setLocation(model.getLocation());
+        dto.setDescription(model.getDescription());
+        dto.setRent(model.getRent());
 
         dto.setBuilding(toBuildingInfo(model.getBuilding()));
         dto.setLandlord(toLandlordInfo(model.getLandlord()));

@@ -10,6 +10,8 @@ public class PropertyDetailsDto {
     private String size;
     private String kind;
     private String location;
+    private String description;
+    private BigDecimal rent;
     private BuildingInfo building;
     private LandlordInfo landlord;
     private LeaseInfo lease;
@@ -24,6 +26,22 @@ public class PropertyDetailsDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public BigDecimal getRent() {
+        return rent;
+    }
+
+    public void setRent(BigDecimal rent) {
+        this.rent = rent;
     }
 
     public String getName() {

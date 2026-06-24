@@ -38,6 +38,10 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
               <input [(ngModel)]="newProp.size" placeholder="Ex: 65 m²" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
             </div>
             <div>
+              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Loyer demandé (€/mois)</label>
+              <input [(ngModel)]="newProp.rent" type="number" placeholder="Ex: 750" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
+            </div>
+            <div>
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Adresse / Localisation</label>
               <input [(ngModel)]="newProp.location" placeholder="Ex: 12 Av. Foch, Nancy" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
             </div>
@@ -58,6 +62,11 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
                   <option [value]="l.id">{{ l.firstName }} {{ l.lastName }}</option>
                 }
               </select>
+            </div>
+            <div style="grid-column:1/3;">
+              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Description</label>
+              <textarea [(ngModel)]="newProp.description" rows="3" placeholder="Appartement lumineux, balcon, parking…"
+                style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
             </div>
           </div>
           <div style="display:flex;gap:10px;margin-top:16px;">
@@ -89,7 +98,7 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
               <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
                 <div style="font-weight:700;font-size:15.5px;line-height:1.25;">{{ p.name }}</div>
                 <div style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:15px;color:#0E4F4A;white-space:nowrap;">
-                  {{ p.lease?.rentAmount ? formatRent(p.lease!.rentAmount, p.lease!.currency) : '—' }}/mois
+                  {{ displayRent(p) }}
                 </div>
               </div>
               <div style="font-size:12.5px;color:#8A938E;margin-top:4px;">{{ p.location }}</div>
@@ -163,5 +172,11 @@ export class BiensComponent implements OnInit {
 
   formatRent(amount: number, currency: string): string {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currency ?? 'EUR', maximumFractionDigits: 0 }).format(amount);
+  }
+
+  displayRent(p: any): string {
+    const amount = p.lease?.rentAmount ?? p.rent;
+    if (!amount) return '—';
+    return this.formatRent(amount, p.lease?.currency ?? 'EUR') + '/mois';
   }
 }

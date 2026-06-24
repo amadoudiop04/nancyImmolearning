@@ -9,7 +9,6 @@ import com.nancyimmo.bailleur.dto.PaymentStatsDto;
 import com.nancyimmo.bailleur.services.PaymentService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/payments")
 public class PaymentController {
 

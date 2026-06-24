@@ -1,5 +1,7 @@
 package com.nancyimmo.bailleur.dto;
 
+import java.math.BigDecimal;
+
 public class PropertyDto {
 
     private Long id;
@@ -7,6 +9,8 @@ public class PropertyDto {
     private String size;
     private String kind;
     private String location;
+    private String description;
+    private BigDecimal rent;
     private Long buildingId;
     private Long landlordId;
 
@@ -35,6 +39,12 @@ public class PropertyDto {
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public BigDecimal getRent() { return rent; }
+    public void setRent(BigDecimal rent) { this.rent = rent; }
 
     public Long getBuildingId() { return buildingId; }
     public void setBuildingId(Long buildingId) { this.buildingId = buildingId; }

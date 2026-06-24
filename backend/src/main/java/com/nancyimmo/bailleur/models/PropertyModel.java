@@ -1,5 +1,7 @@
 package com.nancyimmo.bailleur.models;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,6 +35,8 @@ public class PropertyModel {
     private String size;
     private String kind;
     private String location;
+    private String description;
+    private BigDecimal rent;
 
     public Long getId() {
         return id;
@@ -72,6 +76,22 @@ public class PropertyModel {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public BigDecimal getRent() {
+        return rent;
+    }
+
+    public void setRent(BigDecimal rent) {
+        this.rent = rent;
     }
 
     public LeaseModel getLease() {

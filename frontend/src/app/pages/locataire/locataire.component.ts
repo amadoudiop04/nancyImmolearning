@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ApiService, PropertyDetails, Payment, Document } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-locataire',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   template: `
     <div style="max-width:1180px;margin:0 auto;padding:34px 32px 60px;">
       <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;">
@@ -27,7 +29,8 @@ import { ApiService, PropertyDetails, Payment, Document } from '../../services/a
               </div>
               <span style="background:#E9C46A;color:#3A2E10;font-weight:700;font-size:12px;padding:6px 13px;border-radius:999px;">À régler</span>
             </div>
-            <button style="margin-top:22px;width:100%;padding:14px;border:none;border-radius:12px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">
+            <button (click)="openPayment()" [disabled]="!currentProperty?.lease"
+              style="margin-top:22px;width:100%;padding:14px;border:none;border-radius:12px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">
               Payer en ligne →
             </button>
           </div>
@@ -84,10 +87,80 @@ import { ApiService, PropertyDetails, Payment, Document } from '../../services/a
               </div>
               <div style="font-weight:700;font-size:16px;margin-top:14px;">{{ currentProperty.name }}</div>
               <div style="font-size:13px;color:#8A938E;margin-top:3px;">{{ currentProperty.kind }} · {{ currentProperty.size }} · {{ currentProperty.location }}</div>
+              @if (currentProperty.description) {
+                <div style="margin-top:14px;font-size:13.5px;color:#5A655F;line-height:1.6;">{{ currentProperty.description }}</div>
+              }
             </div>
           }
         </div>
       </div>
+
+      <!-- Online card payment modal -->
+      @if (showPayment) {
+        <div (click)="closePayment()"
+          style="position:fixed;inset:0;background:rgba(22,32,29,0.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;">
+          <div (click)="$event.stopPropagation()"
+            style="background:#fff;border-radius:18px;max-width:440px;width:100%;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,0.3);">
+
+            <div style="background:#0E4F4A;color:#fff;padding:22px 24px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:#7FC9BD;">Paiement sécurisé</div>
+              <div style="font-size:26px;font-weight:800;margin-top:6px;">{{ currentRent }}</div>
+              <div style="font-size:12.5px;color:#BFE0D9;margin-top:2px;">{{ currentProperty?.name }} · Loyer + charges</div>
+            </div>
+
+            @if (paid) {
+              <div style="padding:34px;text-align:center;">
+                <div style="width:56px;height:56px;border-radius:50%;background:#D1FAE5;color:#065F46;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px;">✓</div>
+                <h2 style="margin:0 0 8px;font-size:20px;font-weight:800;">Paiement accepté</h2>
+                <p style="margin:0 0 22px;color:#5A655F;font-size:14px;">Votre loyer a été réglé. Une quittance sera disponible sous peu.</p>
+                <button (click)="closePayment()" style="width:100%;padding:12px;border:none;border-radius:11px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;">Terminé</button>
+              </div>
+            } @else {
+              <form (ngSubmit)="pay()" style="padding:24px;">
+                <div style="margin-bottom:14px;">
+                  <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Titulaire de la carte</label>
+                  <input [(ngModel)]="card.holder" name="holder" placeholder="Thomas Martin" required
+                    style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
+                </div>
+                <div style="margin-bottom:14px;">
+                  <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Numéro de carte</label>
+                  <div style="position:relative;">
+                    <input [(ngModel)]="card.number" name="number" (ngModelChange)="formatCardNumber()" placeholder="1234 5678 9012 3456" maxlength="19" inputmode="numeric" required
+                      style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;letter-spacing:0.05em;">
+                    <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:3px;">
+                      <span style="width:22px;height:14px;border-radius:3px;background:#E76F51;"></span>
+                      <span style="width:22px;height:14px;border-radius:3px;background:#E9C46A;"></span>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                  <div>
+                    <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Expiration</label>
+                    <input [(ngModel)]="card.expiry" name="expiry" placeholder="MM/AA" maxlength="5" required
+                      style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;">
+                  </div>
+                  <div>
+                    <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">CVV</label>
+                    <input [(ngModel)]="card.cvv" name="cvv" type="password" placeholder="123" maxlength="4" inputmode="numeric" required
+                      style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;">
+                  </div>
+                </div>
+
+                @if (payError) { <p style="color:#C2563B;font-size:13px;margin:0 0 14px;">{{ payError }}</p> }
+
+                <button type="submit" [disabled]="processing"
+                  style="width:100%;padding:13px;border:none;border-radius:11px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                  @if (processing) { <span>Traitement…</span> } @else {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 11V8a6 6 0 0 1 12 0v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" stroke-width="1.8"/></svg>
+                    <span>Payer {{ currentRent }}</span>
+                  }
+                </button>
+                <p style="text-align:center;margin:12px 0 0;font-size:11.5px;color:#9AA49E;">🔒 Paiement chiffré — démo, aucune carte réelle n'est débitée.</p>
+              </form>
+            }
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -96,12 +169,73 @@ export class LocataireComponent implements OnInit {
   payments: Payment[] = [];
   documents: Document[] = [];
 
-  constructor(private api: ApiService) {}
+  showPayment = false;
+  processing = false;
+  paid = false;
+  payError = '';
+  card = { holder: '', number: '', expiry: '', cvv: '' };
+
+  constructor(private api: ApiService, private auth: AuthService) {}
+
+  openPayment() {
+    if (!this.currentProperty?.lease) return;
+    this.showPayment = true;
+    this.paid = false;
+    this.payError = '';
+    this.card = { holder: '', number: '', expiry: '', cvv: '' };
+  }
+
+  closePayment() {
+    this.showPayment = false;
+  }
+
+  formatCardNumber() {
+    const digits = this.card.number.replace(/\D/g, '').slice(0, 16);
+    this.card.number = digits.replace(/(.{4})/g, '$1 ').trim();
+  }
+
+  pay() {
+    this.payError = '';
+    const digits = this.card.number.replace(/\D/g, '');
+    if (!this.card.holder || digits.length < 16 || !this.card.expiry || this.card.cvv.length < 3) {
+      this.payError = 'Veuillez vérifier les informations de votre carte.';
+      return;
+    }
+    const lease = this.currentProperty?.lease;
+    if (!lease) return;
+
+    this.processing = true;
+    const today = new Date().toISOString().slice(0, 10);
+    this.api.createPayment({
+      leaseId: lease.id,
+      period: today,
+      amount: lease.rentAmount,
+      status: 'PAID',
+      paidDate: today,
+    } as any).subscribe({
+      next: () => {
+        this.processing = false;
+        this.paid = true;
+        if (lease) {
+          this.api.getPayments({ leaseId: lease.id }).subscribe({ next: p => this.payments = p, error: () => {} });
+        }
+      },
+      error: () => {
+        this.processing = false;
+        this.payError = 'Le paiement a échoué. Réessayez.';
+      }
+    });
+  }
 
   ngOnInit() {
+    const email = this.auth.user?.email?.toLowerCase();
     this.api.getPropertyDetails().subscribe({
       next: props => {
-        this.currentProperty = props.find(p => p.tenant != null) ?? null;
+        // Cible le logement du locataire connecté (par email), sinon le premier occupé.
+        this.currentProperty =
+          props.find(p => p.tenant?.email?.toLowerCase() === email)
+          ?? props.find(p => p.tenant != null)
+          ?? null;
         if (this.currentProperty?.lease) {
           this.api.getPayments({ leaseId: this.currentProperty.lease.id }).subscribe({ next: p => this.payments = p, error: () => {} });
         }

@@ -2,7 +2,6 @@ package com.nancyimmo.bailleur.controllers;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 
@@ -16,7 +15,6 @@ import com.nancyimmo.bailleur.dto.LandlordDto;
 import com.nancyimmo.bailleur.services.LandlordService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/landlords")
 public class LandlordController {
 
