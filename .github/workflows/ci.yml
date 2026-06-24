@@ -1,0 +1,15 @@
+name: CI Validation
+
+on:
+  pull_request:
+    branches: [ main, master ] # Déclenche sur les PR vers la prod
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm install # À adapter selon ton langage
+      - name: Run tests
+        run: npm test

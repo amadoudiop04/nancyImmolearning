@@ -1,39 +1,59 @@
 import { Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-site-layout',
   standalone: true,
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   template: `
-    <div class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-      <header class="sticky top-0 z-10 border-b border-slate-200/70 bg-white/85 backdrop-blur">
-        <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-10 py-4 flex flex-wrap items-center justify-between gap-4">
-          <a class="inline-flex items-center gap-3" routerLink="/" aria-label="Nancy Immo accueil">
-            <span class="h-11 w-11 rounded-xl grid place-items-center text-white font-extrabold bg-gradient-to-br from-orange-500 to-red-600 shadow-lg shadow-orange-500/30">NI</span>
-            <span>
-              <strong class="block text-base">Nancy Immo</strong>
-              <small class="block text-xs text-slate-500">Gestion immobiliere simple</small>
-            </span>
-          </a>
+    <div style="min-height:100vh;background:#F4F6F3;font-family:'Hanken Grotesk',sans-serif;">
 
-          <nav class="flex flex-wrap gap-4 text-sm font-semibold text-slate-600">
-            <a class="hover:text-slate-900 transition-colors" routerLink="/">Accueil</a>
-            <a class="hover:text-slate-900 transition-colors" href="#services">Services</a>
-            <a class="hover:text-slate-900 transition-colors" href="#contact">Contact</a>
-          </nav>
+      <!-- Global Top Bar -->
+      <header style="position:sticky;top:0;z-index:50;height:64px;background:rgba(255,255,255,0.92);
+        backdrop-filter:blur(10px);border-bottom:1px solid #E4E7E2;display:flex;align-items:center;
+        gap:28px;padding:0 28px;">
+
+        <a routerLink="/" style="display:flex;align-items:center;gap:11px;text-decoration:none;color:inherit;">
+          <div style="width:30px;height:30px;border-radius:9px;background:#0E4F4A;display:flex;align-items:center;justify-content:center;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="#2A9D8F"/>
+            </svg>
+          </div>
+          <span style="font-weight:800;font-size:18px;letter-spacing:-0.02em;">Nancy<span style="color:#2A9D8F;">Immo</span></span>
+        </a>
+
+        <nav style="display:flex;gap:6px;margin-left:8px;">
+          <a routerLink="/" routerLinkActive="nav-active" [routerLinkActiveOptions]="{exact:true}"
+            style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;color:#5A655F;transition:all .15s;"
+            class="nav-btn">Accueil</a>
+          <a routerLink="/recherche" routerLinkActive="nav-active"
+            style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;color:#5A655F;transition:all .15s;"
+            class="nav-btn">Rechercher un bien</a>
+          <a routerLink="/bailleur" routerLinkActive="nav-active"
+            style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;color:#5A655F;transition:all .15s;"
+            class="nav-btn">Espace bailleur</a>
+          <a routerLink="/locataire" routerLinkActive="nav-active"
+            style="padding:7px 14px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;color:#5A655F;transition:all .15s;"
+            class="nav-btn">Espace locataire</a>
+        </nav>
+
+        <div style="margin-left:auto;">
+          <a routerLink="/profil"
+            style="width:36px;height:36px;border-radius:50%;background:#E7F1EF;color:#0E4F4A;
+              display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+              cursor:pointer;text-decoration:none;">NA</a>
         </div>
       </header>
 
-      <main class="flex-1">
+      <main>
         <router-outlet />
       </main>
-
-      <footer class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-10 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-slate-500" id="contact">
-        <p>Base frontend prete pour connecter les modules bailleurs, biens et baux.</p>
-        <span>Angular 18 + Spring Boot</span>
-      </footer>
     </div>
+
+    <style>
+      .nav-btn:hover { background:#F4F6F3; color:#16201D; }
+      .nav-active { background:#E7F1EF !important; color:#0E4F4A !important; font-weight:600 !important; }
+    </style>
   `
 })
 export class SiteLayoutComponent {}

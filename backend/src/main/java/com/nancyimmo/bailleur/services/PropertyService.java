@@ -11,19 +11,33 @@ import com.nancyimmo.bailleur.models.LandlordModel;
 import com.nancyimmo.bailleur.models.LeaseModel;
 import com.nancyimmo.bailleur.models.PropertyModel;
 import com.nancyimmo.bailleur.models.TenantModel;
+import com.nancyimmo.bailleur.repositories.BuildingRepository;
+import com.nancyimmo.bailleur.repositories.LandlordRepository;
 import com.nancyimmo.bailleur.repositories.PropertyRepository;
 
 @Service
 public class PropertyService {
 
     private final PropertyRepository propertyRepository;
+    private final BuildingRepository buildingRepository;
+    private final LandlordRepository landlordRepository;
 
-    public PropertyService(PropertyRepository propertyRepository) {
+    public PropertyService(PropertyRepository propertyRepository,
+            BuildingRepository buildingRepository,
+            LandlordRepository landlordRepository) {
         this.propertyRepository = propertyRepository;
+        this.buildingRepository = buildingRepository;
+        this.landlordRepository = landlordRepository;
     }
 
     public PropertyDto create(PropertyDto dto) {
         PropertyModel model = toEntity(dto);
+        if (dto.getBuildingId() != null) {
+            buildingRepository.findById(dto.getBuildingId()).ifPresent(model::setBuilding);
+        }
+        if (dto.getLandlordId() != null) {
+            landlordRepository.findById(dto.getLandlordId()).ifPresent(model::setLandlord);
+        }
         return toDto(propertyRepository.save(model));
     }
 
@@ -53,10 +67,29 @@ public class PropertyService {
                 .collect(Collectors.toList());
     }
 
+    public List<PropertyDetailsDto> findAvailable() {
+        return propertyRepository.findAllWithDetailsBy().stream()
+                .filter(p -> p.getLease() == null)
+                .map(this::toDetailsDto)
+                .collect(Collectors.toList());
+    }
+
     public PropertyDto update(Long id, PropertyDto dto) {
-        PropertyModel model = toEntity(dto);
-        model.setId(id);
-        return toDto(propertyRepository.save(model));
+        return propertyRepository.findById(id)
+                .map(existing -> {
+                    existing.setName(dto.getName());
+                    existing.setSize(dto.getSize());
+                    existing.setKind(dto.getKind());
+                    existing.setLocation(dto.getLocation());
+                    if (dto.getBuildingId() != null) {
+                        buildingRepository.findById(dto.getBuildingId()).ifPresent(existing::setBuilding);
+                    }
+                    if (dto.getLandlordId() != null) {
+                        landlordRepository.findById(dto.getLandlordId()).ifPresent(existing::setLandlord);
+                    }
+                    return toDto(propertyRepository.save(existing));
+                })
+                .orElse(null);
     }
 
     public void delete(Long id) {
@@ -64,12 +97,15 @@ public class PropertyService {
     }
 
     private PropertyDto toDto(PropertyModel model) {
-        return new PropertyDto(
+        PropertyDto dto = new PropertyDto(
                 model.getId(),
                 model.getName(),
                 model.getSize(),
                 model.getKind(),
                 model.getLocation());
+        dto.setBuildingId(model.getBuilding() != null ? model.getBuilding().getId() : null);
+        dto.setLandlordId(model.getLandlord() != null ? model.getLandlord().getId() : null);
+        return dto;
     }
 
     private PropertyModel toEntity(PropertyDto dto) {
@@ -101,10 +137,7 @@ public class PropertyService {
     }
 
     private PropertyDetailsDto.BuildingInfo toBuildingInfo(BuildingModel model) {
-        if (model == null) {
-            return null;
-        }
-
+        if (model == null) return null;
         PropertyDetailsDto.BuildingInfo dto = new PropertyDetailsDto.BuildingInfo();
         dto.setId(model.getId());
         dto.setName(model.getName());
@@ -116,10 +149,7 @@ public class PropertyService {
     }
 
     private PropertyDetailsDto.LandlordInfo toLandlordInfo(LandlordModel model) {
-        if (model == null) {
-            return null;
-        }
-
+        if (model == null) return null;
         PropertyDetailsDto.LandlordInfo dto = new PropertyDetailsDto.LandlordInfo();
         dto.setId(model.getId());
         dto.setFirstName(model.getFirstName());
@@ -134,10 +164,7 @@ public class PropertyService {
     }
 
     private PropertyDetailsDto.LeaseInfo toLeaseInfo(LeaseModel model) {
-        if (model == null) {
-            return null;
-        }
-
+        if (model == null) return null;
         PropertyDetailsDto.LeaseInfo dto = new PropertyDetailsDto.LeaseInfo();
         dto.setId(model.getId());
         dto.setSignatureDate(model.getSignatureDate());
@@ -149,10 +176,7 @@ public class PropertyService {
     }
 
     private PropertyDetailsDto.TenantInfo toTenantInfo(TenantModel model) {
-        if (model == null) {
-            return null;
-        }
-
+        if (model == null) return null;
         PropertyDetailsDto.TenantInfo dto = new PropertyDetailsDto.TenantInfo();
         dto.setId(model.getId());
         dto.setFirstName(model.getFirstName());

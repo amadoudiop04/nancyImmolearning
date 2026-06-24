@@ -7,6 +7,8 @@ public class PropertyDto {
     private String size;
     private String kind;
     private String location;
+    private Long buildingId;
+    private Long landlordId;
 
     public PropertyDto() {
     }
@@ -19,44 +21,24 @@ public class PropertyDto {
         this.location = location;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getSize() { return size; }
+    public void setSize(String size) { this.size = size; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getKind() { return kind; }
+    public void setKind(String kind) { this.kind = kind; }
 
-    public String getSize() {
-        return size;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public void setSize(String size) {
-        this.size = size;
-    }
+    public Long getBuildingId() { return buildingId; }
+    public void setBuildingId(Long buildingId) { this.buildingId = buildingId; }
 
-    public String getKind() {
-        return kind;
-    }
-
-    public void setKind(String kind) {
-        this.kind = kind;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
+    public Long getLandlordId() { return landlordId; }
+    public void setLandlordId(Long landlordId) { this.landlordId = landlordId; }
 }

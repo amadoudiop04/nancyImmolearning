@@ -17,8 +17,8 @@ public class TenantService {
         this.tenantRepository = tenantRepository;
     }
 
-    public TenantDto create(TenantModel tenant) {
-        return toDto(tenantRepository.save(tenant));
+    public TenantDto create(TenantDto dto) {
+        return toDto(tenantRepository.save(toEntity(dto)));
     }
 
     public List<TenantDto> getAll() {

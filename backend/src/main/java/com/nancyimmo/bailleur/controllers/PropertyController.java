@@ -34,6 +34,11 @@ public class PropertyController {
         return propertyService.findAllDetails();
     }
 
+    @GetMapping("/available")
+    public List<PropertyDetailsDto> getAvailable() {
+        return propertyService.findAvailable();
+    }
+
     @GetMapping("/{id}")
     public PropertyDto getOne(@PathVariable Long id) {
         return propertyService.findById(id);

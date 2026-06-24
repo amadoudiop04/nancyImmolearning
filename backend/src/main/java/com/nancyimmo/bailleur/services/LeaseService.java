@@ -7,21 +7,35 @@ import org.springframework.stereotype.Service;
 
 import com.nancyimmo.bailleur.dto.LeaseDto;
 import com.nancyimmo.bailleur.repositories.LeaseRepository;
+import com.nancyimmo.bailleur.repositories.PropertyRepository;
+import com.nancyimmo.bailleur.repositories.TenantRepository;
 import com.nancyimmo.bailleur.models.LeaseModel;
 
 @Service
 public class LeaseService {
 
     private final LeaseRepository leaseRepository;
+    private final PropertyRepository propertyRepository;
+    private final TenantRepository tenantRepository;
 
-    public LeaseService(LeaseRepository leaseRepository) {
+    public LeaseService(LeaseRepository leaseRepository,
+            PropertyRepository propertyRepository,
+            TenantRepository tenantRepository) {
         this.leaseRepository = leaseRepository;
+        this.propertyRepository = propertyRepository;
+        this.tenantRepository = tenantRepository;
     }
 
     public LeaseDto create(LeaseDto dto) {
         LeaseModel model = toEntity(dto);
         if (model.getSignatureDate() == null) {
             model.setSignatureDate(LocalDate.now());
+        }
+        if (dto.getPropertyId() != null) {
+            propertyRepository.findById(dto.getPropertyId()).ifPresent(model::setProperty);
+        }
+        if (dto.getTenantId() != null) {
+            tenantRepository.findById(dto.getTenantId()).ifPresent(model::setTenant);
         }
         return toDto(leaseRepository.save(model));
     }
@@ -44,6 +58,12 @@ public class LeaseService {
                     if (dto.getSignatureDate() != null) {
                         existing.setSignatureDate(dto.getSignatureDate());
                     }
+                    if (dto.getPropertyId() != null) {
+                        propertyRepository.findById(dto.getPropertyId()).ifPresent(existing::setProperty);
+                    }
+                    if (dto.getTenantId() != null) {
+                        tenantRepository.findById(dto.getTenantId()).ifPresent(existing::setTenant);
+                    }
                     return toDto(leaseRepository.save(existing));
                 })
                 .orElse(null);
@@ -54,13 +74,16 @@ public class LeaseService {
     }
 
     private LeaseDto toDto(LeaseModel model) {
-        return new LeaseDto(
+        LeaseDto dto = new LeaseDto(
                 model.getId(),
                 model.getSignatureDate(),
                 model.getStartDate(),
                 model.getEndDate(),
                 model.getRentAmount(),
                 model.getCurrency());
+        dto.setPropertyId(model.getProperty() != null ? model.getProperty().getId() : null);
+        dto.setTenantId(model.getTenant() != null ? model.getTenant().getId() : null);
+        return dto;
     }
 
     private LeaseModel toEntity(LeaseDto dto) {
@@ -73,5 +96,4 @@ public class LeaseService {
         model.setCurrency(dto.getCurrency());
         return model;
     }
-
 }
