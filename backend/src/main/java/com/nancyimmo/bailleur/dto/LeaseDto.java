@@ -11,12 +11,14 @@ public class LeaseDto {
     private LocalDate endDate;
     private BigDecimal rentAmount;
     private String currency;
+    private Long propertyId;
+    private Long tenantId;
 
     public LeaseDto() {
     }
 
-    public LeaseDto(Long id, LocalDate signatureDate, LocalDate startDate, LocalDate endDate, BigDecimal rentAmount,
-            String currency) {
+    public LeaseDto(Long id, LocalDate signatureDate, LocalDate startDate, LocalDate endDate,
+            BigDecimal rentAmount, String currency) {
         this.id = id;
         this.signatureDate = signatureDate;
         this.startDate = startDate;
@@ -25,52 +27,27 @@ public class LeaseDto {
         this.currency = currency;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public LocalDate getSignatureDate() { return signatureDate; }
+    public void setSignatureDate(LocalDate signatureDate) { this.signatureDate = signatureDate; }
 
-    public LocalDate getSignatureDate() {
-        return signatureDate;
-    }
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 
-    public void setSignatureDate(LocalDate signatureDate) {
-        this.signatureDate = signatureDate;
-    }
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
 
-    public LocalDate getStartDate() {
-        return startDate;
-    }
+    public BigDecimal getRentAmount() { return rentAmount; }
+    public void setRentAmount(BigDecimal rentAmount) { this.rentAmount = rentAmount; }
 
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
 
-    public LocalDate getEndDate() {
-        return endDate;
-    }
+    public Long getPropertyId() { return propertyId; }
+    public void setPropertyId(Long propertyId) { this.propertyId = propertyId; }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public BigDecimal getRentAmount() {
-        return rentAmount;
-    }
-
-    public void setRentAmount(BigDecimal rentAmount) {
-        this.rentAmount = rentAmount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
 }

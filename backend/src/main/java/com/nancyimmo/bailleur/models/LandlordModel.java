@@ -29,6 +29,9 @@ public class LandlordModel {
     private String zipCode;
     private String country;
 
+    // Authentification : le bailleur EST le compte utilisateur (mot de passe haché BCrypt).
+    private String password;
+
     public Long getId() {
         return id;
     }
@@ -99,6 +102,14 @@ public class LandlordModel {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
 }

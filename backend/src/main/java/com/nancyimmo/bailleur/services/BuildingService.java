@@ -28,7 +28,7 @@ public class BuildingService {
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
-    }
+    }       
 
     public BuildingDto findById(Long id) {
         return buildingRepository.findById(id)

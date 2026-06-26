@@ -9,7 +9,6 @@ import com.nancyimmo.bailleur.dto.PropertyDetailsDto;
 import com.nancyimmo.bailleur.services.PropertyService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/properties")
 public class PropertyController {
 
@@ -32,6 +31,11 @@ public class PropertyController {
     @GetMapping("/details")
     public List<PropertyDetailsDto> getAllWithDetails() {
         return propertyService.findAllDetails();
+    }
+
+    @GetMapping("/available")
+    public List<PropertyDetailsDto> getAvailable() {
+        return propertyService.findAvailable();
     }
 
     @GetMapping("/{id}")
