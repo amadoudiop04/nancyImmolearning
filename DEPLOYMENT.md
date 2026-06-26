@@ -16,12 +16,22 @@ L'application se compose de **3 briques** déployées séparément :
 ## Étape 1 — Base de données (Neon)
 
 1. Crée un compte sur https://neon.tech et un projet « nancy-immo ».
-2. Récupère la **chaîne de connexion** au format JDBC. Elle ressemble à :
+2. Neon te donne une chaîne **au format libpq**, du type :
    ```
-   jdbc:postgresql://ep-xxxx.eu-central-1.aws.neon.tech/nancyImmo?sslmode=require
+   postgresql://neondb_owner:MON_PASS@ep-xxxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
    ```
-   (note bien le `?sslmode=require` — obligatoire sur Neon).
-3. Note aussi le **user** et le **mot de passe**.
+   ⚠️ **Cette chaîne n'est PAS une URL JDBC.** Il faut la convertir :
+   - ajoute le préfixe **`jdbc:`** devant `postgresql://` ;
+   - **retire** `&channel_binding=require` (paramètre libpq non géré par le driver JDBC) ;
+   - **sors** le user et le mot de passe de l'URL (ils iront dans leurs propres variables).
+
+   Tu obtiens donc, séparément :
+
+   | Variable | Valeur |
+   |----------|--------|
+   | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://ep-xxxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require` |
+   | `SPRING_DATASOURCE_USERNAME` | `neondb_owner` |
+   | `SPRING_DATASOURCE_PASSWORD` | `MON_PASS` |
 
 Le schéma se crée tout seul au 1ᵉʳ démarrage (`hibernate.ddl-auto=update`).
 
@@ -42,7 +52,7 @@ Le schéma se crée tout seul au 1ᵉʳ démarrage (`hibernate.ddl-auto=update`)
    | `SECURITY_JWT_SECRET` | **généré automatiquement** par Render (ne pas toucher) |
    | `APP_CORS_ALLOWED_ORIGINS` | l'URL Netlify (étape 3), ex. `https://nancy-immo.netlify.app` |
 
-4. Déploie. Note l'URL obtenue, ex. `https://nancy-immo-api.onrender.com`.
+4. Déploie. Note l'URL obtenue, `https://nancy-immo-api.onrender.com`.
 
 ---
 
@@ -53,7 +63,7 @@ Le schéma se crée tout seul au 1ᵉʳ démarrage (`hibernate.ddl-auto=update`)
 2. Sur https://netlify.com → **Add new site > Import from GitHub**, sélectionne le dépôt.
    La config est lue depuis `netlify.toml` (base `frontend`, build `npm run build`,
    publication `dist/frontend-app/browser`).
-3. Déploie. Note l'URL, ex. `https://nancy-immo.netlify.app`.
+3. Déploie. Note l'URL, `https://nancy-immo.netlify.app`.
 4. Reviens sur Render et mets `APP_CORS_ALLOWED_ORIGINS` = cette URL Netlify, puis redéploie.
 
 Grâce au proxy Netlify (`/api/*` → backend), le navigateur ne fait que des appels

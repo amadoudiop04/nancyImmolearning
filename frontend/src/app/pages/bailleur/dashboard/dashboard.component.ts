@@ -23,7 +23,7 @@ import { AuthService } from '../../../services/auth.service';
 
       <!-- KPIs -->
       @if (stats) {
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px;">
+        <div class="nm-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px;">
           <div class="nm-kpi" style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;transition:transform .18s ease,box-shadow .18s ease;">
             <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#9AA49E;">Biens gérés</div>
             <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ animProperties }}</div>
@@ -104,7 +104,7 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api.getDashboardStats().subscribe({
+    this.api.getMyDashboardStats().subscribe({
       next: s => { this.stats = s; this.animateCounters(s); },
       error: () => {}
     });

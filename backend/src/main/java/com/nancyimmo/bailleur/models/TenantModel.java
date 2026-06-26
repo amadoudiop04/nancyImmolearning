@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.List;
@@ -17,6 +19,11 @@ public class TenantModel {
 
     @OneToMany(mappedBy = "tenant")
     private List<LeaseModel> leases;
+
+    // Le bailleur propriétaire de la fiche locataire (isolation des données).
+    @ManyToOne
+    @JoinColumn(name = "landlord_id")
+    private LandlordModel landlord;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -110,6 +117,14 @@ public class TenantModel {
 
     public void setLeases(List<LeaseModel> leases) {
         this.leases = leases;
+    }
+
+    public LandlordModel getLandlord() {
+        return landlord;
+    }
+
+    public void setLandlord(LandlordModel landlord) {
+        this.landlord = landlord;
     }
 
 }

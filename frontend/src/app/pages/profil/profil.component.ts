@@ -30,7 +30,7 @@ import { ToastService } from '../../services/toast.service';
           }
         </div>
       } @else {
-        <div style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:flex-start;">
+        <div class="nm-split" style="display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:flex-start;">
           <!-- Avatar card -->
           <div style="background:#fff;border:1px solid #E4E7E2;border-radius:18px;padding:26px;text-align:center;">
             <div style="width:84px;height:84px;border-radius:24px;background:#0E4F4A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;margin:0 auto;">
@@ -51,7 +51,7 @@ import { ToastService } from '../../services/toast.service';
             <!-- Informations personnelles -->
             <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:24px;">
               <div style="font-size:16px;font-weight:700;margin-bottom:18px;">Informations personnelles</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                 <div>
                   <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Prénom</label>
                   <input [(ngModel)]="landlord.firstName" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;color:#16201D;background:#fff;outline:none;">
@@ -115,6 +115,37 @@ import { ToastService } from '../../services/toast.service';
                 <span style="font-size:13px;color:#2A9D8F;font-weight:600;">{{ savedMessage }}</span>
               }
             </div>
+
+            <!-- Zone de danger : suppression du compte -->
+            <div style="background:#fff;border:1px solid #F0D9D2;border-radius:16px;padding:24px;">
+              <div style="font-size:16px;font-weight:700;margin-bottom:6px;color:#C2563B;">Zone de danger</div>
+              <p style="font-size:13px;color:#8A938E;margin:0 0 16px;line-height:1.6;">
+                La suppression de votre compte est <strong>définitive</strong> et efface toutes vos données :
+                biens, locataires, baux, paiements, candidatures et documents. Cette action est irréversible.
+              </p>
+              @if (!confirmingDelete) {
+                <button (click)="confirmingDelete = true"
+                  style="padding:11px 20px;border:1px solid #E4C8C0;background:#fff;color:#C2563B;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;border-radius:11px;">
+                  Supprimer mon compte
+                </button>
+              } @else {
+                <div style="background:#FBF1EE;border:1px solid #F0D9D2;border-radius:12px;padding:16px;">
+                  <div style="font-size:13.5px;font-weight:600;color:#16201D;margin-bottom:12px;">
+                    Confirmez-vous la suppression définitive de votre compte ?
+                  </div>
+                  <div style="display:flex;gap:10px;">
+                    <button (click)="deleteAccount()" [disabled]="deleting"
+                      style="padding:10px 18px;border:none;border-radius:10px;background:#C2563B;color:#fff;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;">
+                      {{ deleting ? 'Suppression…' : 'Oui, supprimer définitivement' }}
+                    </button>
+                    <button (click)="confirmingDelete = false" [disabled]="deleting"
+                      style="padding:10px 18px;border:1px solid #D6DED9;border-radius:10px;background:#fff;color:#16201D;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         </div>
       }
@@ -127,6 +158,8 @@ export class ProfilComponent implements OnInit {
   saving = false;
   savedMessage = '';
   propertyCount = 0;
+  confirmingDelete = false;
+  deleting = false;
 
   notifPrefs = [
     { key: 'payments', title: 'Paiements reçus', sub: 'Alerte à chaque loyer encaissé', on: true },
@@ -210,5 +243,20 @@ export class ProfilComponent implements OnInit {
   logout() {
     this.auth.logout();
     this.router.navigate(['/connexion']);
+  }
+
+  deleteAccount() {
+    this.deleting = true;
+    this.api.deleteAccount().subscribe({
+      next: () => {
+        this.toast.success('Votre compte a été supprimé');
+        this.auth.logout();
+        this.router.navigate(['/connexion']);
+      },
+      error: () => {
+        this.deleting = false;
+        this.toast.error('La suppression du compte a échoué');
+      }
+    });
   }
 }

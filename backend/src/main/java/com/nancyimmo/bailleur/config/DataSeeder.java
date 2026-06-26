@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,7 @@ import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.PaymentRepository;
 import com.nancyimmo.bailleur.repositories.PropertyRepository;
 import com.nancyimmo.bailleur.repositories.TenantRepository;
+import com.nancyimmo.bailleur.services.PdfService;
 
 /**
  * Pré-remplit la base avec un jeu de données démo cohérent au premier démarrage
@@ -30,6 +32,7 @@ import com.nancyimmo.bailleur.repositories.TenantRepository;
  * immédiatement. Compte démo : nancy@nancyimmo.fr / password123.
  */
 @Component
+@Order(1)
 public class DataSeeder implements CommandLineRunner {
 
     private static final String IMG = "https://images.unsplash.com/";
@@ -44,6 +47,10 @@ public class DataSeeder implements CommandLineRunner {
     private final DocumentRepository documentRepository;
     private final ApplicationRepository applicationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PdfService pdfService;
+
+    // Bailleur courant en cours d'amorçage (pour rattacher immeubles/locataires/documents).
+    private LandlordModel seedLandlord;
 
     public DataSeeder(LandlordRepository landlordRepository,
             BuildingRepository buildingRepository,
@@ -53,7 +60,8 @@ public class DataSeeder implements CommandLineRunner {
             PaymentRepository paymentRepository,
             DocumentRepository documentRepository,
             ApplicationRepository applicationRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            PdfService pdfService) {
         this.landlordRepository = landlordRepository;
         this.buildingRepository = buildingRepository;
         this.propertyRepository = propertyRepository;
@@ -63,6 +71,7 @@ public class DataSeeder implements CommandLineRunner {
         this.documentRepository = documentRepository;
         this.applicationRepository = applicationRepository;
         this.passwordEncoder = passwordEncoder;
+        this.pdfService = pdfService;
     }
 
     @Override
@@ -83,6 +92,7 @@ public class DataSeeder implements CommandLineRunner {
         nancy.setZipCode("54000");
         nancy.setCountry("France");
         nancy = landlordRepository.save(nancy);
+        this.seedLandlord = nancy;
 
         // --- Immeubles ---
         BuildingModel lilas = building("Résidence Les Lilas", "12 Avenue Foch", "Nancy", "54000");
@@ -134,11 +144,13 @@ public class DataSeeder implements CommandLineRunner {
         seedPayments(lDuplex, new BigDecimal("1150"), 3, false);
         seedPayments(lCarnot, new BigDecimal("820"), 7, true); // dernier mois en retard
 
-        // --- Documents ---
-        document("Contrat de bail — Appartement T4 Foch", "LEASE", pFoch, thomas);
-        document("Quittance — Foch — " + monthLabel(0), "QUITTANCE", pFoch, thomas);
-        document("Contrat de bail — Duplex Sainte-Marie", "LEASE", pDuplex, camille);
-        document("Quittance — Carnot — " + monthLabel(1), "QUITTANCE", pCarnot, marie);
+        // --- Documents (vrais PDF générés) ---
+        leaseDoc("Contrat de bail — Appartement T4 Foch", "LEASE", lFoch, pdfService.buildBail(lFoch));
+        leaseDoc("Quittance — Foch — " + monthLabel(0), "QUITTANCE", lFoch,
+                pdfService.buildQuittance(lFoch, java.time.YearMonth.now(), lFoch.getRentAmount()));
+        leaseDoc("Contrat de bail — Duplex Sainte-Marie", "LEASE", lDuplex, pdfService.buildBail(lDuplex));
+        leaseDoc("Quittance — Carnot — " + monthLabel(1), "QUITTANCE", lCarnot,
+                pdfService.buildQuittance(lCarnot, java.time.YearMonth.now().minusMonths(1), lCarnot.getRentAmount()));
 
         // --- Candidatures (dossiers déposés sur les biens disponibles) ---
         application(pStudio, "Julie", "Moreau", "julie.moreau@email.fr", "0623456789",
@@ -158,6 +170,7 @@ public class DataSeeder implements CommandLineRunner {
         b.setCity(city);
         b.setZipCode(zip);
         b.setCountry("France");
+        b.setLandlord(seedLandlord);
         return buildingRepository.save(b);
     }
 
@@ -172,6 +185,7 @@ public class DataSeeder implements CommandLineRunner {
         t.setCity(city);
         t.setZipCode(zip);
         t.setCountry("France");
+        t.setLandlord(seedLandlord);
         return tenantRepository.save(t);
     }
 
@@ -220,13 +234,17 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    private void document(String name, String type, PropertyModel property, TenantModel tenant) {
+    private void leaseDoc(String name, String type, LeaseModel lease, byte[] content) {
         DocumentModel d = new DocumentModel();
         d.setName(name);
         d.setDocType(type);
         d.setCreatedAt(LocalDate.now());
-        d.setProperty(property);
-        d.setTenant(tenant);
+        d.setLandlord(seedLandlord);
+        d.setProperty(lease.getProperty());
+        d.setTenant(lease.getTenant());
+        d.setContent(content);
+        d.setContentType("application/pdf");
+        d.setFileName(name.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "") + ".pdf");
         documentRepository.save(d);
     }
 

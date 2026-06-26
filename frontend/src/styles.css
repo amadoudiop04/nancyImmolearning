@@ -1,3 +1,86 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   Couche responsive (mobile / tablette)
+   Les composants utilisent des styles INLINE (grilles à colonnes
+   fixes), que les media queries ne peuvent pas atteindre. On
+   surcharge donc via des classes repères (!important) appliquées
+   sur les conteneurs concernés.
+   ============================================================ */
+
+/* Évite tout défilement horizontal au niveau de la page. */
+html, body { max-width: 100%; overflow-x: hidden; }
+
+/* Tablette : les grilles de cartes passent en 2 colonnes. */
+@media (max-width: 1024px) {
+  .nm-cards { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* Téléphone large / petite tablette. */
+@media (max-width: 860px) {
+  /* Mises en page deux-panneaux → empilées. */
+  .nm-split { grid-template-columns: 1fr !important; gap: 22px !important; }
+
+  /* Espace bailleur : la barre latérale verticale devient une
+     barre d'onglets horizontale défilante au-dessus du contenu. */
+  .nm-shell { flex-direction: column !important; }
+  .nm-sidebar {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border-right: none !important;
+    border-bottom: 1px solid #E4E7E2 !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nm-sidebar .sidebar-btn { flex: 0 0 auto !important; white-space: nowrap !important; }
+  .nm-side-label, .nm-side-promo { display: none !important; }
+  .nm-main { padding: 20px 16px 44px !important; max-width: 100% !important; }
+
+  /* Pages de connexion / inscription : on masque le panneau de
+     marque et le formulaire occupe tout l'écran. */
+  .nm-auth-split { grid-template-columns: 1fr !important; }
+  .nm-auth-brand { display: none !important; }
+}
+
+/* Téléphone. */
+@media (max-width: 640px) {
+  .nm-cards { grid-template-columns: 1fr !important; }
+  .nm-form  { grid-template-columns: 1fr !important; }
+  /* Les enfants qui forçaient un span de colonnes reprennent 1 colonne. */
+  .nm-form > [style*="grid-column"] { grid-column: auto !important; }
+  .nm-stats  { grid-template-columns: repeat(2, 1fr) !important; }
+  .nm-months { grid-template-columns: repeat(3, 1fr) !important; }
+
+  /* Header global : passe sur deux lignes (marque + actions, puis
+     navigation défilante en pleine largeur). */
+  .nm-topbar  { height: auto !important; flex-wrap: wrap !important; padding: 10px 14px !important; gap: 10px !important; }
+  .nm-topnav  { order: 3; flex-basis: 100% !important; margin-left: 0 !important; overflow-x: auto !important; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .nm-topnav a { white-space: nowrap !important; }
+  .nm-topnav::-webkit-scrollbar { display: none; }
+  .nm-hide-sm { display: none !important; }
+
+  /* Tableau des locataires → cartes empilées (l'en-tête disparaît). */
+  .nm-row-head { display: none !important; }
+  .nm-row { grid-template-columns: 1fr !important; gap: 8px !important; align-items: stretch !important; }
+  .nm-row > [style*="text-align:right"] { justify-content: flex-start !important; flex-wrap: wrap !important; }
+
+  /* Relevé de compte (espace locataire) : compacté. */
+  .nm-stmt { grid-template-columns: 52px 1fr 64px 64px 70px !important; gap: 6px !important; font-size: 11px !important; }
+
+  /* Titres un peu plus compacts. */
+  h1 { font-size: 23px !important; }
+}
+
+/* Très petit téléphone. */
+@media (max-width: 380px) {
+  .nm-stats  { grid-template-columns: 1fr !important; }
+  .nm-months { grid-template-columns: repeat(2, 1fr) !important; }
+}

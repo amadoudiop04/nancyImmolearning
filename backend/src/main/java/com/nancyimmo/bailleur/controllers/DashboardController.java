@@ -19,10 +19,19 @@ public class DashboardController {
         this.propertyService = propertyService;
     }
 
+    /** Statistiques globales de la plateforme — endpoint PUBLIC (page d'accueil). */
     @GetMapping
     public DashboardDto getStats() {
-        List<PropertyDetailsDto> props = propertyService.findAllDetails();
+        return computeStats(propertyService.findAllDetailsGlobal());
+    }
 
+    /** Statistiques du bailleur connecté — authentifié (espace bailleur). */
+    @GetMapping("/me")
+    public DashboardDto getMyStats() {
+        return computeStats(propertyService.findAllDetails());
+    }
+
+    private DashboardDto computeStats(List<PropertyDetailsDto> props) {
         int totalProperties = props.size();
         long activeTenants = props.stream().filter(p -> p.getTenant() != null).count();
         BigDecimal monthlyRevenue = props.stream()

@@ -9,7 +9,7 @@ import { ApiService, DashboardStats } from '../../services/api.service';
   template: `
     <div>
       <!-- Hero -->
-      <section style="max-width:1180px;margin:0 auto;padding:64px 32px 40px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:48px;align-items:center;">
+      <section class="nm-split" style="max-width:1180px;margin:0 auto;padding:64px 32px 40px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:48px;align-items:center;">
         <div>
           <span style="display:inline-block;background:#E7F1EF;color:#0E4F4A;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:0.04em;padding:7px 14px;border-radius:999px;font-weight:500;">Gestion locative autonome</span>
           <h1 style="font-size:56px;line-height:1.04;font-weight:800;letter-spacing:-0.03em;margin:22px 0 0;">
@@ -81,7 +81,7 @@ import { ApiService, DashboardStats } from '../../services/api.service';
           <h2 style="font-size:34px;font-weight:800;letter-spacing:-0.02em;margin:0;">Tout ce qu'il faut pour gérer seul</h2>
           <p style="font-size:16px;color:#5A655F;margin:12px 0 0;">Une plateforme complète, côté bailleur comme côté locataire.</p>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
+        <div class="nm-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
           <div style="background:#fff;border:1px solid #E4E7E2;border-radius:18px;padding:26px;">
             <div style="width:46px;height:46px;border-radius:13px;background:#E7F1EF;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 11l8-6.5L20 11v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5z" stroke="#0E4F4A" stroke-width="1.7" stroke-linejoin="round"/></svg>

@@ -59,7 +59,7 @@ import { ToastService } from '../../services/toast.service';
           Aucun bien disponible pour ces critères.
         </div>
       } @else {
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;">
+        <div class="nm-cards" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;">
           @for (r of filtered; track r.id) {
             <div class="nm-rcard" style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;overflow:hidden;transition:box-shadow .18s ease,transform .18s ease;">
               <div style="position:relative;height:160px;display:flex;align-items:flex-end;padding:12px;overflow:hidden;"
@@ -133,7 +133,7 @@ import { ToastService } from '../../services/toast.service';
                 <div style="font-size:12.5px;color:#8A938E;margin-top:2px;">{{ candidature.location }} · {{ formatRent(candidature.rent) }}/mois</div>
               </div>
               <form (ngSubmit)="submitDossier()" style="padding:24px 26px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                   <div>
                     <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Prénom</label>
                     <input [(ngModel)]="dossier.firstName" name="firstName" required

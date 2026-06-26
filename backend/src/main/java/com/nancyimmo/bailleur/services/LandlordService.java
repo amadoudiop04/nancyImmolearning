@@ -2,6 +2,7 @@ package com.nancyimmo.bailleur.services;
 
 import org.springframework.stereotype.Service;
 import com.nancyimmo.bailleur.repositories.LandlordRepository;
+import com.nancyimmo.bailleur.security.CurrentUser;
 import com.nancyimmo.bailleur.dto.LandlordDto;
 import com.nancyimmo.bailleur.models.LandlordModel;
 
@@ -9,9 +10,11 @@ import com.nancyimmo.bailleur.models.LandlordModel;
 public class LandlordService {
 
     private final LandlordRepository landlordRepository;
+    private final CurrentUser currentUser;
 
-    public LandlordService(LandlordRepository landlordRepository) {
+    public LandlordService(LandlordRepository landlordRepository, CurrentUser currentUser) {
         this.landlordRepository = landlordRepository;
+        this.currentUser = currentUser;
     }
 
     public LandlordDto createLandlord(LandlordDto landlordDto) {
@@ -19,38 +22,40 @@ public class LandlordService {
         return toDto(landlordRepository.save(model));
     }
 
+    /** Ne renvoie que le compte connecté (isolation : un bailleur ne voit pas les autres). */
     public java.util.List<LandlordDto> findAll() {
-        return landlordRepository.findAll()
-                .stream()
-                .map(this::toDto)
-                .collect(java.util.stream.Collectors.toList());
+        LandlordModel me = currentUser.landlord();
+        return me == null ? java.util.List.of() : java.util.List.of(toDto(me));
     }
 
     public void delete(Long id) {
-        landlordRepository.deleteById(id);
+        // Suppression réservée au compte connecté (voir aussi /api/auth/me).
+        LandlordModel me = currentUser.landlord();
+        if (me != null && me.getId().equals(id)) {
+            landlordRepository.deleteById(id);
+        }
     }
 
     public LandlordDto findById(Long id) {
-        return landlordRepository.findById(id)
-                .map(this::toDto)
-                .orElse(null);
+        LandlordModel me = currentUser.landlord();
+        return (me != null && me.getId().equals(id)) ? toDto(me) : null;
     }
 
     public LandlordDto update(Long id, LandlordDto landlordDto) {
-        // On charge l'existant pour NE PAS écraser le mot de passe (absent du DTO).
-        return landlordRepository.findById(id)
-                .map(existing -> {
-                    existing.setFirstName(landlordDto.getFirstName());
-                    existing.setLastName(landlordDto.getLastName());
-                    existing.setEmail(landlordDto.getEmail());
-                    existing.setPhone(landlordDto.getPhone());
-                    existing.setStreet(landlordDto.getStreet());
-                    existing.setCity(landlordDto.getCity());
-                    existing.setZipCode(landlordDto.getZipCode());
-                    existing.setCountry(landlordDto.getCountry());
-                    return toDto(landlordRepository.save(existing));
-                })
-                .orElse(null);
+        // On ne met à jour QUE le compte connecté, et on NE touche PAS au mot de passe (absent du DTO).
+        LandlordModel me = currentUser.landlord();
+        if (me == null || !me.getId().equals(id)) {
+            return null;
+        }
+        me.setFirstName(landlordDto.getFirstName());
+        me.setLastName(landlordDto.getLastName());
+        me.setEmail(landlordDto.getEmail());
+        me.setPhone(landlordDto.getPhone());
+        me.setStreet(landlordDto.getStreet());
+        me.setCity(landlordDto.getCity());
+        me.setZipCode(landlordDto.getZipCode());
+        me.setCountry(landlordDto.getCountry());
+        return toDto(landlordRepository.save(me));
     }
 
     private LandlordDto toDto(LandlordModel model) {

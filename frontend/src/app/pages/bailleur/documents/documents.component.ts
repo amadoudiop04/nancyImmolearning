@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ApiService, Document, PropertyDetails, Tenant } from '../../../services/api.service';
+import { ApiService, Document, PropertyDetails, Tenant, Lease } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 
 @Component({
@@ -9,62 +9,144 @@ import { ToastService } from '../../../services/toast.service';
   imports: [FormsModule],
   template: `
     <div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap;">
         <div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9AA49E;">Archivage</div>
           <h1 style="margin:6px 0 0;font-size:28px;font-weight:800;letter-spacing:-0.02em;">Documents</h1>
         </div>
-        <button (click)="showForm=!showForm"
-          style="padding:11px 18px;border:none;border-radius:11px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
-          + Ajouter un document
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button (click)="toggle('bail')"
+            style="padding:11px 18px;border:1px solid #0E4F4A;border-radius:11px;background:#fff;color:#0E4F4A;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
+            Générer un bail
+          </button>
+          <button (click)="toggle('quittance')"
+            style="padding:11px 18px;border:1px solid #0E4F4A;border-radius:11px;background:#fff;color:#0E4F4A;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
+            Générer une quittance
+          </button>
+          <button (click)="toggle('upload')"
+            style="padding:11px 18px;border:none;border-radius:11px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
+            + Importer une pièce
+          </button>
+        </div>
       </div>
 
-      @if (showForm) {
+      <!-- Générer un bail (PDF réel) -->
+      @if (panel === 'bail') {
         <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:24px;margin-bottom:24px;">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;">
+          <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;">Générer un contrat de bail</h2>
+          <p style="margin:0 0 16px;font-size:13px;color:#8A938E;">Un PDF est généré à partir des informations du bail (bailleur, locataire, bien, loyer, dates).</p>
+          @if (leases.length === 0) {
+            <p style="color:#9AA49E;font-size:13.5px;">Aucun bail actif. Attribuez d'abord un locataire à un bien.</p>
+          } @else {
+            <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+              <div style="flex:1;min-width:260px;">
+                <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Bail</label>
+                <select [(ngModel)]="selectedLeaseId"
+                  style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
+                  <option [ngValue]="null">— Choisir un bail —</option>
+                  @for (l of leases; track l.id) {
+                    <option [ngValue]="l.id">{{ leaseLabel(l) }}</option>
+                  }
+                </select>
+              </div>
+              <button (click)="generateBail()" [disabled]="!selectedLeaseId || working"
+                style="padding:11px 22px;border:none;border-radius:10px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
+                {{ working ? 'Génération…' : 'Générer le PDF' }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Générer une quittance (PDF réel) -->
+      @if (panel === 'quittance') {
+        <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:24px;margin-bottom:24px;">
+          <h2 style="margin:0 0 6px;font-size:16px;font-weight:700;">Générer une quittance de loyer</h2>
+          <p style="margin:0 0 16px;font-size:13px;color:#8A938E;">Quittance PDF pour un bail et un mois donné (bailleur, locataire, bien, montant).</p>
+          @if (leases.length === 0) {
+            <p style="color:#9AA49E;font-size:13.5px;">Aucun bail actif. Attribuez d'abord un locataire à un bien.</p>
+          } @else {
+            <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+              <div style="flex:1;min-width:240px;">
+                <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Bail</label>
+                <select [(ngModel)]="quittanceLeaseId"
+                  style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
+                  <option [ngValue]="null">— Choisir un bail —</option>
+                  @for (l of leases; track l.id) {
+                    <option [ngValue]="l.id">{{ leaseLabel(l) }}</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Mois</label>
+                <input type="month" [(ngModel)]="quittanceMonth"
+                  style="padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
+              </div>
+              <button (click)="generateQuittance()" [disabled]="!quittanceLeaseId || !quittanceMonth || working"
+                style="padding:11px 22px;border:none;border-radius:10px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
+                {{ working ? 'Génération…' : 'Générer le PDF' }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Importer une pièce justificative (upload réel) -->
+      @if (panel === 'upload') {
+        <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:24px;margin-bottom:24px;">
+          <h2 style="margin:0 0 16px;font-size:16px;font-weight:700;">Importer une pièce justificative</h2>
+          <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;">
             <div style="grid-column:1/3;">
-              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Nom du document</label>
-              <input [(ngModel)]="newDoc.name" placeholder="Bail signé Mars 2024"
+              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Nom (optionnel)</label>
+              <input [(ngModel)]="newDoc.name" placeholder="Pièce d'identité — Thomas Bernard"
                 style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
             </div>
             <div>
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Type</label>
               <select [(ngModel)]="newDoc.docType"
                 style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
+                <option value="IDENTITY">Pièce d'identité</option>
                 <option value="LEASE">Bail</option>
                 <option value="QUITTANCE">Quittance</option>
-                <option value="IDENTITY">Identité</option>
                 <option value="OTHER">Autre</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Lié au bien</label>
-              <select [(ngModel)]="newDoc.propertyId"
-                style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
-                <option [value]="undefined">— Aucun —</option>
-                @for (p of properties; track p.id) {
-                  <option [value]="p.id">{{ p.name }}</option>
-                }
               </select>
             </div>
             <div>
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Lié au locataire</label>
               <select [(ngModel)]="newDoc.tenantId"
                 style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
-                <option [value]="undefined">— Aucun —</option>
+                <option [ngValue]="undefined">— Aucun —</option>
                 @for (t of tenants; track t.id) {
-                  <option [value]="t.id">{{ t.firstName }} {{ t.lastName }}</option>
+                  <option [ngValue]="t.id">{{ t.firstName }} {{ t.lastName }}</option>
                 }
               </select>
             </div>
+            <div>
+              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Lié au bien</label>
+              <select [(ngModel)]="newDoc.propertyId"
+                style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
+                <option [ngValue]="undefined">— Aucun —</option>
+                @for (p of properties; track p.id) {
+                  <option [ngValue]="p.id">{{ p.name }}</option>
+                }
+              </select>
+            </div>
+            <div style="grid-column:1/5;">
+              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Fichier (PDF, image…)</label>
+              <input type="file" (change)="onFileSelected($event)"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
+                style="width:100%;padding:10px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
+              @if (selectedFile) {
+                <div style="margin-top:8px;font-size:12.5px;color:#5A655F;">{{ selectedFile.name }} ({{ fileSize(selectedFile.size) }})</div>
+              }
+            </div>
           </div>
           <div style="display:flex;gap:10px;margin-top:16px;">
-            <button (click)="createDoc()"
+            <button (click)="uploadDoc()" [disabled]="working"
               style="padding:11px 22px;border:none;border-radius:10px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
-              Enregistrer
+              {{ working ? 'Import…' : 'Importer' }}
             </button>
-            <button (click)="showForm=false"
+            <button (click)="panel=null"
               style="padding:11px 22px;border:1px solid #D6DED9;border-radius:10px;background:#fff;color:#16201D;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
               Annuler
             </button>
@@ -85,18 +167,24 @@ import { ToastService } from '../../../services/toast.service';
         }
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+      <div class="nm-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
         @for (d of visibleDocuments; track d.id) {
           <div style="background:#fff;border:1px solid #E4E7E2;border-radius:14px;padding:18px;display:flex;gap:13px;align-items:center;">
-            <div style="width:40px;height:40px;border-radius:10px;background:#E7F1EF;color:#0E4F4A;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;flex:none;">PDF</div>
+            <div style="width:40px;height:40px;border-radius:10px;background:#E7F1EF;color:#0E4F4A;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;flex:none;">
+              {{ fileBadge(d) }}
+            </div>
             <div style="min-width:0;flex:1;">
               <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ d.name }}</div>
               <div style="font-size:11.5px;color:#9AA49E;">{{ typeLabel(d.docType) }} · {{ d.createdAt }}</div>
             </div>
-            <button (click)="view(d)" title="Visualiser"
-              style="border:1px solid #D6DED9;background:#fff;color:#0E4F4A;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;padding:6px 10px;flex:none;">
-              Visualiser
-            </button>
+            @if (d.hasFile) {
+              <button (click)="download(d)" title="Télécharger / ouvrir"
+                style="border:1px solid #D6DED9;background:#fff;color:#0E4F4A;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;padding:6px 10px;flex:none;">
+                Ouvrir
+              </button>
+            } @else {
+              <span style="font-size:11px;color:#B9C0BA;flex:none;">Sans fichier</span>
+            }
             <button (click)="deleteDoc(d.id)" title="Supprimer"
               style="border:none;background:transparent;color:#C2563B;cursor:pointer;font-size:13px;flex:none;">✕</button>
           </div>
@@ -105,58 +193,6 @@ import { ToastService } from '../../../services/toast.service';
           <div style="grid-column:1/-1;text-align:center;padding:48px;color:#9AA49E;">Aucun document dans cette catégorie.</div>
         }
       </div>
-
-      <!-- Viewer modal -->
-      @if (viewing) {
-        <div (click)="viewing=null"
-          style="position:fixed;inset:0;background:rgba(22,32,29,0.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;">
-          <div (click)="$event.stopPropagation()"
-            style="background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 30px 70px rgba(0,0,0,0.3);">
-            <!-- toolbar -->
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #EEF1ED;">
-              <div style="font-size:14px;font-weight:700;">{{ viewing.name }}</div>
-              <button (click)="viewing=null" style="border:none;background:transparent;font-size:18px;cursor:pointer;color:#5A655F;">✕</button>
-            </div>
-            <!-- simulated PDF body -->
-            <div style="padding:34px;background:#F4F6F3;">
-              <div style="background:#fff;border:1px solid #E4E7E2;border-radius:10px;padding:34px;font-family:'Hanken Grotesk',sans-serif;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0E4F4A;padding-bottom:16px;">
-                  <div>
-                    <div style="font-weight:800;font-size:18px;">Nancy<span style="color:#2A9D8F;">Immo</span></div>
-                    <div style="font-size:11px;color:#9AA49E;margin-top:2px;">{{ typeLabel(viewing.docType) }}</div>
-                  </div>
-                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5A655F;text-align:right;">
-                    Réf. #{{ viewing.id }}<br>{{ viewing.createdAt }}
-                  </div>
-                </div>
-                <h2 style="font-size:20px;font-weight:800;margin:22px 0 8px;">{{ viewing.name }}</h2>
-                @if (viewing.docType === 'QUITTANCE') {
-                  <p style="font-size:13.5px;color:#5A655F;line-height:1.7;">
-                    Le bailleur atteste avoir reçu du locataire la somme correspondant au paiement
-                    du loyer et des charges pour la période indiquée, et lui en délivre quittance.
-                  </p>
-                  <div style="margin-top:20px;background:#E7F1EF;border-radius:10px;padding:16px;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:13px;color:#0E4F4A;font-weight:600;">Statut du paiement</span>
-                    <span style="font-size:13px;color:#065F46;font-weight:700;background:#D1FAE5;padding:5px 12px;border-radius:999px;">Acquitté</span>
-                  </div>
-                } @else {
-                  <p style="font-size:13.5px;color:#5A655F;line-height:1.7;">
-                    Document archivé dans votre espace Nancy Immo. Aperçu généré automatiquement.
-                  </p>
-                }
-                <div style="margin-top:28px;display:flex;justify-content:space-between;font-size:12px;color:#9AA49E;border-top:1px solid #EEF1ED;padding-top:14px;">
-                  <span>Nancy Immo — Gestion locative autonome</span>
-                  <span>Signature : N. Aubert</span>
-                </div>
-              </div>
-            </div>
-            <div style="padding:14px 22px;border-top:1px solid #EEF1ED;display:flex;justify-content:flex-end;gap:10px;">
-              <button (click)="viewing=null" style="padding:9px 18px;border:1px solid #D6DED9;border-radius:9px;background:#fff;color:#16201D;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">Fermer</button>
-              <button (click)="print()" style="padding:9px 18px;border:none;border-radius:9px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">Imprimer / PDF</button>
-            </div>
-          </div>
-        </div>
-      }
     </div>
   `
 })
@@ -164,9 +200,14 @@ export class DocumentsComponent implements OnInit {
   documents: Document[] = [];
   properties: PropertyDetails[] = [];
   tenants: Tenant[] = [];
-  showForm = false;
-  newDoc: any = { docType: 'OTHER' };
-  viewing: Document | null = null;
+  leases: Lease[] = [];
+  panel: 'upload' | 'bail' | 'quittance' | null = null;
+  newDoc: any = { docType: 'IDENTITY' };
+  selectedFile: File | null = null;
+  selectedLeaseId: number | null = null;
+  quittanceLeaseId: number | null = null;
+  quittanceMonth: string = new Date().toISOString().slice(0, 7);
+  working = false;
   activeType = 'ALL';
 
   typeTabs = [
@@ -184,24 +225,87 @@ export class DocumentsComponent implements OnInit {
     return this.documents.filter(d => d.docType === this.activeType);
   }
 
-  view(d: Document) { this.viewing = d; }
-
-  print() { window.print(); }
+  toggle(panel: 'upload' | 'bail' | 'quittance') {
+    this.panel = this.panel === panel ? null : panel;
+  }
 
   ngOnInit() {
     this.load();
     this.api.getPropertyDetails().subscribe({ next: p => this.properties = p, error: () => {} });
     this.api.getTenants().subscribe({ next: t => this.tenants = t, error: () => {} });
+    this.api.getLeases().subscribe({ next: l => this.leases = l, error: () => {} });
   }
 
   load() {
     this.api.getDocuments().subscribe({ next: d => this.documents = d, error: () => {} });
   }
 
-  createDoc() {
-    this.api.createDocument({ ...this.newDoc, createdAt: new Date().toISOString().slice(0, 10) } as any).subscribe({
-      next: () => { this.showForm = false; this.newDoc = { docType: 'OTHER' }; this.toast.success('Document ajouté'); this.load(); },
-      error: () => this.toast.error('Impossible d\'ajouter le document')
+  onFileSelected(e: Event) {
+    const input = e.target as HTMLInputElement;
+    this.selectedFile = input.files && input.files.length ? input.files[0] : null;
+  }
+
+  uploadDoc() {
+    if (!this.selectedFile) { this.toast.error('Choisissez un fichier'); return; }
+    const form = new FormData();
+    form.append('file', this.selectedFile);
+    if (this.newDoc.name) form.append('name', this.newDoc.name);
+    form.append('docType', this.newDoc.docType || 'IDENTITY');
+    if (this.newDoc.propertyId) form.append('propertyId', String(this.newDoc.propertyId));
+    if (this.newDoc.tenantId) form.append('tenantId', String(this.newDoc.tenantId));
+    this.working = true;
+    this.api.uploadDocument(form).subscribe({
+      next: () => {
+        this.working = false;
+        this.panel = null;
+        this.newDoc = { docType: 'IDENTITY' };
+        this.selectedFile = null;
+        this.toast.success('Pièce importée');
+        this.load();
+      },
+      error: () => { this.working = false; this.toast.error('Import impossible'); }
+    });
+  }
+
+  generateBail() {
+    if (!this.selectedLeaseId) return;
+    this.working = true;
+    this.api.generateBail(this.selectedLeaseId).subscribe({
+      next: () => {
+        this.working = false;
+        this.panel = null;
+        this.selectedLeaseId = null;
+        this.toast.success('Contrat de bail généré (PDF)');
+        this.load();
+      },
+      error: () => { this.working = false; this.toast.error('Génération impossible'); }
+    });
+  }
+
+  generateQuittance() {
+    if (!this.quittanceLeaseId || !this.quittanceMonth) return;
+    const [year, month] = this.quittanceMonth.split('-').map(Number);
+    this.working = true;
+    this.api.generateQuittance(this.quittanceLeaseId, year, month).subscribe({
+      next: () => {
+        this.working = false;
+        this.panel = null;
+        this.quittanceLeaseId = null;
+        this.toast.success('Quittance générée (PDF)');
+        this.load();
+      },
+      error: () => { this.working = false; this.toast.error('Génération impossible'); }
+    });
+  }
+
+  download(d: Document) {
+    this.api.downloadDocument(d.id).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      },
+      error: () => this.toast.error('Téléchargement impossible')
     });
   }
 
@@ -210,6 +314,26 @@ export class DocumentsComponent implements OnInit {
       next: () => { this.toast.success('Document supprimé'); this.load(); },
       error: () => this.toast.error('Suppression impossible')
     });
+  }
+
+  leaseLabel(l: Lease): string {
+    const prop = this.properties.find(p => p.id === l.propertyId);
+    const propName = prop?.name ?? ('Bien #' + l.propertyId);
+    const tenantName = prop?.tenant ? ` — ${prop.tenant.firstName} ${prop.tenant.lastName}` : '';
+    return propName + tenantName;
+  }
+
+  fileBadge(d: Document): string {
+    if (!d.hasFile) return '—';
+    const n = (d.fileName ?? '').toLowerCase();
+    if (n.endsWith('.png') || n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.webp')) return 'IMG';
+    return 'PDF';
+  }
+
+  fileSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' o';
+    if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' Ko';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' Mo';
   }
 
   typeLabel(t: string): string {

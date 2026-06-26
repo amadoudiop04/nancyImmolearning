@@ -8,9 +8,9 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [FormsModule, RouterLink],
   template: `
-    <div style="min-height:100vh;display:grid;grid-template-columns:1fr 1fr;">
+    <div class="nm-auth-split" style="min-height:100vh;display:grid;grid-template-columns:1fr 1fr;">
       <!-- Left brand panel -->
-      <div style="background:#0E4F4A;color:#fff;padding:56px 64px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;">
+      <div class="nm-auth-brand" style="background:#0E4F4A;color:#fff;padding:56px 64px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;">
         <a routerLink="/" style="display:flex;align-items:center;gap:11px;position:relative;z-index:2;text-decoration:none;color:#fff;">
           <div style="width:32px;height:32px;border-radius:9px;background:#2A9D8F;display:flex;align-items:center;justify-content:center;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" fill="#fff"/></svg>
@@ -39,7 +39,7 @@ import { AuthService } from '../../services/auth.service';
           <p style="margin:8px 0 0;color:#5A655F;font-size:14.5px;">Gérez vos biens sans agence, gratuitement.</p>
 
           <form (ngSubmit)="register()" style="margin-top:22px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
               <div>
                 <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Prénom</label>
                 <input [(ngModel)]="form.firstName" name="firstName" placeholder="Nancy" required

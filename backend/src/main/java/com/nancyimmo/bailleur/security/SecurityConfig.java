@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/dashboard").permitAll()
                         // Un candidat peut déposer un dossier sans compte
                         .requestMatchers(HttpMethod.POST, "/api/applications").permitAll()
+                        // Webhook Stripe (appelé par Stripe, sans JWT ; signé)
+                        .requestMatchers(HttpMethod.POST, "/api/stripe/webhook").permitAll()
                         // Permet les requêtes preflight CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Tout le reste nécessite une authentification
