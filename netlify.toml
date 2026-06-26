@@ -10,7 +10,7 @@
 # ⚠️ Remplace l'URL ci-dessous par celle de TON backend Render une fois créé.
 [[redirects]]
   from = "/api/*"
-  to = "https://REMPLACER-PAR-TON-BACKEND.onrender.com/api/:splat"
+  to = "https://nancy-immo-api.onrender.com/api/:splat"
   status = 200
   force = true
 
