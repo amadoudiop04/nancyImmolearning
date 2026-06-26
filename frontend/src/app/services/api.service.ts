@@ -39,7 +39,17 @@ export interface PaymentStats {
 }
 export interface Document {
   id: number; name: string; docType: string; createdAt: string;
-  propertyId?: number; tenantId?: number;
+  propertyId?: number; tenantId?: number; hasFile?: boolean; fileName?: string;
+}
+export interface MonthCell {
+  month: number; label: string;
+  status: 'PAID' | 'PENDING' | 'LATE' | 'NONE' | string;
+  amount: number; paidDate?: string;
+}
+export interface TenantPaymentHistory {
+  tenantId: number; tenantName: string; propertyName?: string; year: number;
+  months: MonthCell[];
+  totalEncaisse: number; totalEnAttente: number; totalRetard: number;
 }
 export interface DashboardStats {
   totalProperties: number; activeTenants: number; monthlyRevenue: number; occupancyRate: number;
@@ -116,6 +126,18 @@ export class ApiService {
     return this.http.get<Payment[]>(`${this.api}/payments`, { params: p });
   }
   getPaymentStats(): Observable<PaymentStats> { return this.http.get<PaymentStats>(`${this.api}/payments/stats`); }
+  getTenantPaymentHistory(tenantId: number, year?: number): Observable<TenantPaymentHistory> {
+    let p = new HttpParams();
+    if (year) p = p.set('year', year);
+    return this.http.get<TenantPaymentHistory>(`${this.api}/payments/tenant/${tenantId}/history`, { params: p });
+  }
+  // Paiement en ligne Stripe
+  createCheckout(leaseId: number, period?: string): Observable<{ url: string }> {
+    return this.http.post<{ url: string }>(`${this.api}/payments/checkout`, { leaseId, period });
+  }
+  confirmCheckout(sessionId: string): Observable<Payment> {
+    return this.http.post<Payment>(`${this.api}/payments/confirm`, { sessionId });
+  }
   createPayment(pay: Omit<Payment, 'id'>): Observable<Payment> { return this.http.post<Payment>(`${this.api}/payments`, pay); }
   updatePayment(id: number, pay: Partial<Payment>): Observable<Payment> { return this.http.put<Payment>(`${this.api}/payments/${id}`, pay); }
   deletePayment(id: number): Observable<void> { return this.http.delete<void>(`${this.api}/payments/${id}`); }
@@ -130,9 +152,17 @@ export class ApiService {
   createDocument(d: Omit<Document, 'id'>): Observable<Document> { return this.http.post<Document>(`${this.api}/documents`, d); }
   deleteDocument(id: number): Observable<void> { return this.http.delete<void>(`${this.api}/documents/${id}`); }
   generateQuittances(): Observable<Document[]> { return this.http.post<Document[]>(`${this.api}/documents/generate-quittances`, {}); }
+  generateBail(leaseId: number): Observable<Document> { return this.http.post<Document>(`${this.api}/documents/generate-bail`, { leaseId }); }
+  generateQuittance(leaseId: number, year: number, month: number): Observable<Document> { return this.http.post<Document>(`${this.api}/documents/generate-quittance`, { leaseId, year, month }); }
+  uploadDocument(form: FormData): Observable<Document> { return this.http.post<Document>(`${this.api}/documents/upload`, form); }
+  downloadDocument(id: number): Observable<Blob> { return this.http.get(`${this.api}/documents/${id}/download`, { responseType: 'blob' }); }
 
   // Dashboard
   getDashboardStats(): Observable<DashboardStats> { return this.http.get<DashboardStats>(`${this.api}/dashboard`); }
+  getMyDashboardStats(): Observable<DashboardStats> { return this.http.get<DashboardStats>(`${this.api}/dashboard/me`); }
+
+  // Compte
+  deleteAccount(): Observable<void> { return this.http.delete<void>(`/api/auth/me`); }
 }
 
 export default ApiService;

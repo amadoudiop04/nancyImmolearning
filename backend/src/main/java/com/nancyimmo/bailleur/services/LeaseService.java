@@ -18,6 +18,7 @@ import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.PaymentRepository;
 import com.nancyimmo.bailleur.repositories.PropertyRepository;
 import com.nancyimmo.bailleur.repositories.TenantRepository;
+import com.nancyimmo.bailleur.security.CurrentUser;
 import com.nancyimmo.bailleur.models.LeaseModel;
 
 @Service
@@ -27,15 +28,18 @@ public class LeaseService {
     private final PropertyRepository propertyRepository;
     private final TenantRepository tenantRepository;
     private final PaymentRepository paymentRepository;
+    private final CurrentUser currentUser;
 
     public LeaseService(LeaseRepository leaseRepository,
             PropertyRepository propertyRepository,
             TenantRepository tenantRepository,
-            PaymentRepository paymentRepository) {
+            PaymentRepository paymentRepository,
+            CurrentUser currentUser) {
         this.leaseRepository = leaseRepository;
         this.propertyRepository = propertyRepository;
         this.tenantRepository = tenantRepository;
         this.paymentRepository = paymentRepository;
+        this.currentUser = currentUser;
     }
 
     /**
@@ -43,7 +47,9 @@ public class LeaseService {
      * (loyer + charges) et un crédit par paiement reçu, avec solde courant.
      */
     public List<StatementLineDto> getStatement(Long leaseId) {
-        LeaseModel lease = leaseRepository.findById(leaseId).orElse(null);
+        // On ne révèle la situation de compte que pour les baux du bailleur connecté.
+        LeaseModel lease = leaseRepository.findByIdAndProperty_Landlord_Email(leaseId, currentUser.requireEmail())
+                .orElse(null);
         if (lease == null) {
             return List.of();
         }
@@ -97,29 +103,34 @@ public class LeaseService {
     }
 
     public LeaseDto create(LeaseDto dto) {
+        String email = currentUser.requireEmail();
         LeaseModel model = toEntity(dto);
         if (model.getSignatureDate() == null) {
             model.setSignatureDate(LocalDate.now());
         }
+        // Le bien ET le locataire doivent appartenir au bailleur connecté.
         if (dto.getPropertyId() != null) {
-            propertyRepository.findById(dto.getPropertyId()).ifPresent(model::setProperty);
+            propertyRepository.findByIdAndLandlord_Email(dto.getPropertyId(), email).ifPresent(model::setProperty);
         }
         if (dto.getTenantId() != null) {
-            tenantRepository.findById(dto.getTenantId()).ifPresent(model::setTenant);
+            tenantRepository.findByIdAndLandlord_Email(dto.getTenantId(), email).ifPresent(model::setTenant);
         }
         return toDto(leaseRepository.save(model));
     }
 
     public List<LeaseDto> findAll() {
-        return leaseRepository.findAll().stream().map(this::toDto).toList();
+        return leaseRepository.findByProperty_Landlord_Email(currentUser.requireEmail())
+                .stream().map(this::toDto).toList();
     }
 
     public LeaseDto findById(Long id) {
-        return leaseRepository.findById(id).map(this::toDto).orElse(null);
+        return leaseRepository.findByIdAndProperty_Landlord_Email(id, currentUser.requireEmail())
+                .map(this::toDto).orElse(null);
     }
 
     public LeaseDto update(Long id, LeaseDto dto) {
-        return leaseRepository.findById(id)
+        String email = currentUser.requireEmail();
+        return leaseRepository.findByIdAndProperty_Landlord_Email(id, email)
                 .map(existing -> {
                     existing.setStartDate(dto.getStartDate());
                     existing.setEndDate(dto.getEndDate());
@@ -129,10 +140,10 @@ public class LeaseService {
                         existing.setSignatureDate(dto.getSignatureDate());
                     }
                     if (dto.getPropertyId() != null) {
-                        propertyRepository.findById(dto.getPropertyId()).ifPresent(existing::setProperty);
+                        propertyRepository.findByIdAndLandlord_Email(dto.getPropertyId(), email).ifPresent(existing::setProperty);
                     }
                     if (dto.getTenantId() != null) {
-                        tenantRepository.findById(dto.getTenantId()).ifPresent(existing::setTenant);
+                        tenantRepository.findByIdAndLandlord_Email(dto.getTenantId(), email).ifPresent(existing::setTenant);
                     }
                     return toDto(leaseRepository.save(existing));
                 })
@@ -141,7 +152,8 @@ public class LeaseService {
 
     @org.springframework.transaction.annotation.Transactional
     public void delete(Long id) {
-        com.nancyimmo.bailleur.models.LeaseModel lease = leaseRepository.findById(id).orElse(null);
+        com.nancyimmo.bailleur.models.LeaseModel lease =
+                leaseRepository.findByIdAndProperty_Landlord_Email(id, currentUser.requireEmail()).orElse(null);
         if (lease == null) {
             return;
         }

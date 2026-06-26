@@ -18,6 +18,7 @@ import com.nancyimmo.bailleur.repositories.LandlordRepository;
 import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.PaymentRepository;
 import com.nancyimmo.bailleur.repositories.PropertyRepository;
+import com.nancyimmo.bailleur.security.CurrentUser;
 
 @Service
 public class PropertyService {
@@ -28,58 +29,72 @@ public class PropertyService {
     private final DocumentRepository documentRepository;
     private final LeaseRepository leaseRepository;
     private final PaymentRepository paymentRepository;
+    private final CurrentUser currentUser;
 
     public PropertyService(PropertyRepository propertyRepository,
             BuildingRepository buildingRepository,
             LandlordRepository landlordRepository,
             DocumentRepository documentRepository,
             LeaseRepository leaseRepository,
-            PaymentRepository paymentRepository) {
+            PaymentRepository paymentRepository,
+            CurrentUser currentUser) {
         this.propertyRepository = propertyRepository;
         this.buildingRepository = buildingRepository;
         this.landlordRepository = landlordRepository;
         this.documentRepository = documentRepository;
         this.leaseRepository = leaseRepository;
         this.paymentRepository = paymentRepository;
+        this.currentUser = currentUser;
     }
 
     public PropertyDto create(PropertyDto dto) {
         PropertyModel model = toEntity(dto);
+        // Le bien appartient TOUJOURS au bailleur connecté (on ignore tout landlordId du client).
+        model.setLandlord(currentUser.requireLandlord());
         if (dto.getBuildingId() != null) {
-            buildingRepository.findById(dto.getBuildingId()).ifPresent(model::setBuilding);
-        }
-        if (dto.getLandlordId() != null) {
-            landlordRepository.findById(dto.getLandlordId()).ifPresent(model::setLandlord);
+            // L'immeuble doit appartenir au bailleur connecté.
+            buildingRepository.findByIdAndLandlord_Email(dto.getBuildingId(), currentUser.requireEmail())
+                    .ifPresent(model::setBuilding);
         }
         return toDto(propertyRepository.save(model));
     }
 
     public List<PropertyDto> findAll() {
-        return propertyRepository.findAll()
+        return propertyRepository.findByLandlord_Email(currentUser.requireEmail())
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     public PropertyDto findById(Long id) {
-        return propertyRepository.findById(id)
+        return propertyRepository.findWithDetailsByIdAndLandlord_Email(id, currentUser.requireEmail())
                 .map(this::toDto)
                 .orElse(null);
     }
 
     public PropertyDetailsDto findDetailsById(Long id) {
-        return propertyRepository.findWithDetailsById(id)
+        return propertyRepository.findWithDetailsByIdAndLandlord_Email(id, currentUser.requireEmail())
                 .map(this::toDetailsDto)
                 .orElse(null);
     }
 
+    /** Biens du bailleur connecté (espace bailleur). */
     public List<PropertyDetailsDto> findAllDetails() {
+        return propertyRepository.findAllWithDetailsByLandlord_Email(currentUser.requireEmail())
+                .stream()
+                .map(this::toDetailsDto)
+                .collect(Collectors.toList());
+    }
+
+    /** Tous les biens de la plateforme (statistiques publiques de la page d'accueil). */
+    public List<PropertyDetailsDto> findAllDetailsGlobal() {
         return propertyRepository.findAllWithDetailsBy()
                 .stream()
                 .map(this::toDetailsDto)
                 .collect(Collectors.toList());
     }
 
+    /** Annonces disponibles : public (recherche), tous bailleurs confondus. */
     public List<PropertyDetailsDto> findAvailable() {
         return propertyRepository.findAllWithDetailsBy().stream()
                 .filter(p -> p.getLease() == null)
@@ -88,7 +103,8 @@ public class PropertyService {
     }
 
     public PropertyDto update(Long id, PropertyDto dto) {
-        return propertyRepository.findById(id)
+        // On ne modifie que les biens du bailleur connecté ; on ne change jamais le propriétaire.
+        return propertyRepository.findByIdAndLandlord_Email(id, currentUser.requireEmail())
                 .map(existing -> {
                     existing.setName(dto.getName());
                     existing.setSize(dto.getSize());
@@ -102,10 +118,8 @@ public class PropertyService {
                         existing.setImageUrl(dto.getImageUrl());
                     }
                     if (dto.getBuildingId() != null) {
-                        buildingRepository.findById(dto.getBuildingId()).ifPresent(existing::setBuilding);
-                    }
-                    if (dto.getLandlordId() != null) {
-                        landlordRepository.findById(dto.getLandlordId()).ifPresent(existing::setLandlord);
+                        buildingRepository.findByIdAndLandlord_Email(dto.getBuildingId(), currentUser.requireEmail())
+                                .ifPresent(existing::setBuilding);
                     }
                     return toDto(propertyRepository.save(existing));
                 })
@@ -114,11 +128,20 @@ public class PropertyService {
 
     @Transactional
     public void delete(Long id) {
+        // On ne supprime que les biens du bailleur connecté.
+        PropertyModel property = propertyRepository.findByIdAndLandlord_Email(id, currentUser.requireEmail())
+                .orElse(null);
+        if (property == null) {
+            return;
+        }
         // Supprime d'abord les enregistrements dépendants pour éviter les violations de clé étrangère.
         documentRepository.deleteAll(documentRepository.findByPropertyId(id));
 
         leaseRepository.findByPropertyId(id).ifPresent(lease -> {
             paymentRepository.deleteAll(paymentRepository.findByLeaseId(lease.getId()));
+            lease.setProperty(null);
+            lease.setTenant(null);
+            property.setLease(null);
             leaseRepository.delete(lease);
         });
 

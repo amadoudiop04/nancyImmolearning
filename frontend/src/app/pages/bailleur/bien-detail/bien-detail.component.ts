@@ -15,7 +15,7 @@ import { ToastService } from '../../../services/toast.service';
       @if (!property) {
         <div style="text-align:center;padding:48px;color:#9AA49E;">Chargement…</div>
       } @else {
-        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;">
+        <div class="nm-split" style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;">
           <div>
             <div style="position:relative;height:240px;border-radius:18px;overflow:hidden;display:flex;align-items:flex-end;padding:16px;"
               [style.background]="property.imageUrl ? '#EDEFEA' : 'repeating-linear-gradient(45deg,#EDEFEA,#EDEFEA 13px,#E4E7E2 13px,#E4E7E2 26px)'">
@@ -68,7 +68,7 @@ import { ToastService } from '../../../services/toast.service';
                   <button (click)="showDocForm=false" style="padding:9px 14px;border:1px solid #D6DED9;border-radius:8px;background:#fff;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">Annuler</button>
                 </div>
               }
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 @for (d of documents; track d.id) {
                   <div style="display:flex;align-items:center;gap:11px;padding:11px;border:1px solid #EEF1ED;border-radius:11px;">
                     <div style="width:32px;height:32px;border-radius:8px;background:#E7F1EF;color:#0E4F4A;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;flex:none;">PDF</div>
@@ -89,7 +89,7 @@ import { ToastService } from '../../../services/toast.service';
             @if (!property.lease) {
               <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;margin-top:18px;">
                 <div style="font-size:15px;font-weight:700;margin-bottom:14px;">Créer un bail</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                   <div>
                     <label style="font-size:12px;font-weight:600;color:#5A655F;margin-bottom:5px;display:block;">Date de début</label>
                     <input type="date" [(ngModel)]="newLease.startDate" style="width:100%;padding:9px 12px;border:1px solid #D6DED9;border-radius:8px;font-family:inherit;font-size:13px;">

@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,5 +53,15 @@ public class AuthController {
         }
         AuthResponse user = authService.currentUser(authentication.getName());
         return ResponseEntity.ok(user);
+    }
+
+    /** Suppression définitive du compte connecté et de toutes ses données. */
+    @DeleteMapping("/me")
+    public ResponseEntity<?> deleteAccount(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        authService.deleteAccount(authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 }

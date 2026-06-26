@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.nancyimmo.bailleur.repositories.DocumentRepository;
 import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.TenantRepository;
+import com.nancyimmo.bailleur.security.CurrentUser;
 import com.nancyimmo.bailleur.dto.TenantDto;
 import com.nancyimmo.bailleur.models.TenantModel;
 import java.util.stream.Collectors;
@@ -17,35 +18,59 @@ public class TenantService {
     private final TenantRepository tenantRepository;
     private final LeaseRepository leaseRepository;
     private final DocumentRepository documentRepository;
+    private final CurrentUser currentUser;
 
     public TenantService(TenantRepository tenantRepository,
             LeaseRepository leaseRepository,
-            DocumentRepository documentRepository) {
+            DocumentRepository documentRepository,
+            CurrentUser currentUser) {
         this.tenantRepository = tenantRepository;
         this.leaseRepository = leaseRepository;
         this.documentRepository = documentRepository;
+        this.currentUser = currentUser;
     }
 
     public TenantDto create(TenantDto dto) {
-        return toDto(tenantRepository.save(toEntity(dto)));
+        TenantModel model = toEntity(dto);
+        // Le locataire appartient au bailleur connecté.
+        model.setLandlord(currentUser.requireLandlord());
+        return toDto(tenantRepository.save(model));
     }
 
     public List<TenantDto> getAll() {
-        return tenantRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
+        return tenantRepository.findByLandlord_Email(currentUser.requireEmail())
+                .stream().map(this::toDto).collect(Collectors.toList());
     }
 
     public TenantDto findById(Long id) {
-        return tenantRepository.findById(id).map(this::toDto).orElse(null);
+        return tenantRepository.findByIdAndLandlord_Email(id, currentUser.requireEmail())
+                .map(this::toDto).orElse(null);
     }
 
     public TenantDto update(Long id, TenantDto tenantDto) {
-        TenantModel tenant = toEntity(tenantDto);
-        tenant.setId(id);
-        return toDto(tenantRepository.save(tenant));
+        // On ne modifie que les locataires du bailleur connecté.
+        return tenantRepository.findByIdAndLandlord_Email(id, currentUser.requireEmail())
+                .map(existing -> {
+                    existing.setFirstName(tenantDto.getFirstName());
+                    existing.setLastName(tenantDto.getLastName());
+                    existing.setEmail(tenantDto.getEmail());
+                    existing.setPhone(tenantDto.getPhone());
+                    existing.setStreet(tenantDto.getStreet());
+                    existing.setCity(tenantDto.getCity());
+                    existing.setZipCode(tenantDto.getZipCode());
+                    existing.setCountry(tenantDto.getCountry());
+                    return toDto(tenantRepository.save(existing));
+                })
+                .orElse(null);
     }
 
     @Transactional
     public void delete(Long id) {
+        TenantModel tenant = tenantRepository.findByIdAndLandlord_Email(id, currentUser.requireEmail())
+                .orElse(null);
+        if (tenant == null) {
+            return;
+        }
         // Détache le locataire des baux (le bien redevient vacant) et des documents.
         leaseRepository.findByTenantId(id).forEach(lease -> {
             lease.setTenant(null);

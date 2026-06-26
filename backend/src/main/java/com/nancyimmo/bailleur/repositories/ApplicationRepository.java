@@ -10,4 +10,7 @@ public interface ApplicationRepository extends JpaRepository<ApplicationModel, L
     List<ApplicationModel> findByPropertyId(Long propertyId);
     List<ApplicationModel> findByStatus(String status);
     List<ApplicationModel> findAllByOrderByCreatedAtDesc();
+
+    // ─── Isolation par bailleur (via le bien) ─────────────────────────────────
+    List<ApplicationModel> findByProperty_Landlord_EmailOrderByCreatedAtDesc(String email);
 }

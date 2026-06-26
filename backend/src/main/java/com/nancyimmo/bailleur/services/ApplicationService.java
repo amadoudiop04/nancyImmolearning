@@ -43,9 +43,16 @@ public class ApplicationService {
                 .stream().map(this::toDto).collect(Collectors.toList());
     }
 
-    public List<ApplicationDto> findByProperty(Long propertyId) {
-        return applicationRepository.findByPropertyId(propertyId)
-                .stream().map(this::toDto).collect(Collectors.toList());
+    /** Candidatures sur un bien précis — limitées aux biens du bailleur connecté. */
+    public List<ApplicationDto> findByProperty(Long propertyId, String email) {
+        if (email == null) {
+            return List.of();
+        }
+        return applicationRepository.findByPropertyId(propertyId).stream()
+                .filter(a -> a.getProperty() != null
+                        && a.getProperty().getLandlord() != null
+                        && email.equalsIgnoreCase(a.getProperty().getLandlord().getEmail()))
+                .map(this::toDto).collect(Collectors.toList());
     }
 
     /** Candidatures déposées sur les biens appartenant au bailleur connecté (par email). */
@@ -53,12 +60,21 @@ public class ApplicationService {
         if (email == null) {
             return List.of();
         }
-        return applicationRepository.findAllByOrderByCreatedAtDesc().stream()
-                .filter(a -> a.getProperty() != null
-                        && a.getProperty().getLandlord() != null
-                        && email.equalsIgnoreCase(a.getProperty().getLandlord().getEmail()))
+        return applicationRepository.findByProperty_Landlord_EmailOrderByCreatedAtDesc(email).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    /** Vrai si la candidature porte sur un bien du bailleur connecté. */
+    public boolean ownedByLandlord(Long applicationId, String email) {
+        if (email == null) {
+            return false;
+        }
+        return applicationRepository.findById(applicationId)
+                .map(a -> a.getProperty() != null
+                        && a.getProperty().getLandlord() != null
+                        && email.equalsIgnoreCase(a.getProperty().getLandlord().getEmail()))
+                .orElse(false);
     }
 
     public ApplicationDto updateStatus(Long id, String status) {

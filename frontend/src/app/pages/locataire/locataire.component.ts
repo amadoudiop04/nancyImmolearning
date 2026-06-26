@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService, PropertyDetails, Payment, Document, StatementLine } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-locataire',
@@ -17,7 +19,7 @@ import { AuthService } from '../../services/auth.service';
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1.5fr 360px;gap:20px;">
+      <div class="nm-split" style="display:grid;grid-template-columns:1.5fr 360px;gap:20px;">
         <div>
           <!-- Solde -->
           <div style="background:#0E4F4A;border-radius:18px;padding:26px;color:#fff;">
@@ -29,10 +31,14 @@ import { AuthService } from '../../services/auth.service';
               </div>
               <span style="background:#E9C46A;color:#3A2E10;font-weight:700;font-size:12px;padding:6px 13px;border-radius:999px;">À régler</span>
             </div>
-            <button (click)="openPayment()" [disabled]="!currentProperty?.lease"
-              style="margin-top:22px;width:100%;padding:14px;border:none;border-radius:12px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;">
-              Payer en ligne →
+            <button (click)="startCheckout()" [disabled]="!currentProperty?.lease || processing"
+              style="margin-top:22px;width:100%;padding:14px;border:none;border-radius:12px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+              @if (processing) { <span>Redirection vers le paiement…</span> } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 11V8a6 6 0 0 1 12 0v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" stroke-width="1.8"/></svg>
+                <span>Payer en ligne par carte →</span>
+              }
             </button>
+            <div style="margin-top:10px;font-size:11.5px;color:#BFE0D9;text-align:center;">🔒 Paiement sécurisé par Stripe</div>
           </div>
 
           <!-- Situation de compte (débit / crédit / solde) -->
@@ -45,13 +51,13 @@ import { AuthService } from '../../services/auth.service';
               </span>
             </div>
 
-            <div style="display:grid;grid-template-columns:64px 1fr 92px 92px 96px;gap:10px;padding:10px 0;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:#9AA49E;border-bottom:1px solid #EEF1ED;">
+            <div class="nm-stmt" style="display:grid;grid-template-columns:64px 1fr 92px 92px 96px;gap:10px;padding:10px 0;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:#9AA49E;border-bottom:1px solid #EEF1ED;">
               <span>Date</span><span>Libellé</span>
               <span style="text-align:right;">Débit</span><span style="text-align:right;">Crédit</span><span style="text-align:right;">Solde</span>
             </div>
 
             @for (l of statement; track $index) {
-              <div class="nm-stmt-row" style="display:grid;grid-template-columns:64px 1fr 92px 92px 96px;gap:10px;padding:12px 0;border-bottom:1px solid #F2F4F0;font-size:13px;align-items:center;transition:background .15s;">
+              <div class="nm-stmt-row nm-stmt" style="display:grid;grid-template-columns:64px 1fr 92px 92px 96px;gap:10px;padding:12px 0;border-bottom:1px solid #F2F4F0;font-size:13px;align-items:center;transition:background .15s;">
                 <span style="font-family:'IBM Plex Mono',monospace;color:#9AA49E;font-size:12px;">{{ shortDate(l.date) }}</span>
                 <span style="font-weight:500;">{{ l.label }}</span>
                 <span style="text-align:right;font-family:'IBM Plex Mono',monospace;color:#C2563B;">{{ l.debit ? fmt(l.debit) : '' }}</span>
@@ -67,7 +73,7 @@ import { AuthService } from '../../services/auth.service';
           <!-- Documents -->
           <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:22px;margin-top:18px;">
             <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Mes documents</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
+            <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;">
               @for (d of documents; track d.id) {
                 <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #EEF1ED;border-radius:12px;">
                   <div style="width:34px;height:34px;border-radius:9px;background:#E7F1EF;color:#0E4F4A;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9.5px;flex:none;">PDF</div>
@@ -106,72 +112,6 @@ import { AuthService } from '../../services/auth.service';
         </div>
       </div>
 
-      <!-- Online card payment modal -->
-      @if (showPayment) {
-        <div (click)="closePayment()"
-          style="position:fixed;inset:0;background:rgba(22,32,29,0.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;">
-          <div (click)="$event.stopPropagation()"
-            style="background:#fff;border-radius:18px;max-width:440px;width:100%;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,0.3);">
-
-            <div style="background:#0E4F4A;color:#fff;padding:22px 24px;">
-              <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:#7FC9BD;">Paiement sécurisé</div>
-              <div style="font-size:26px;font-weight:800;margin-top:6px;">{{ currentRent }}</div>
-              <div style="font-size:12.5px;color:#BFE0D9;margin-top:2px;">{{ currentProperty?.name }} · Loyer + charges</div>
-            </div>
-
-            @if (paid) {
-              <div style="padding:34px;text-align:center;">
-                <div style="width:56px;height:56px;border-radius:50%;background:#D1FAE5;color:#065F46;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 16px;">✓</div>
-                <h2 style="margin:0 0 8px;font-size:20px;font-weight:800;">Paiement accepté</h2>
-                <p style="margin:0 0 22px;color:#5A655F;font-size:14px;">Votre loyer a été réglé. Une quittance sera disponible sous peu.</p>
-                <button (click)="closePayment()" style="width:100%;padding:12px;border:none;border-radius:11px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;">Terminé</button>
-              </div>
-            } @else {
-              <form (ngSubmit)="pay()" style="padding:24px;">
-                <div style="margin-bottom:14px;">
-                  <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Titulaire de la carte</label>
-                  <input [(ngModel)]="card.holder" name="holder" placeholder="Thomas Martin" required
-                    style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
-                </div>
-                <div style="margin-bottom:14px;">
-                  <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Numéro de carte</label>
-                  <div style="position:relative;">
-                    <input [(ngModel)]="card.number" name="number" (ngModelChange)="formatCardNumber()" placeholder="1234 5678 9012 3456" maxlength="19" inputmode="numeric" required
-                      style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;letter-spacing:0.05em;">
-                    <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;gap:3px;">
-                      <span style="width:22px;height:14px;border-radius:3px;background:#E76F51;"></span>
-                      <span style="width:22px;height:14px;border-radius:3px;background:#E9C46A;"></span>
-                    </div>
-                  </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
-                  <div>
-                    <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Expiration</label>
-                    <input [(ngModel)]="card.expiry" name="expiry" placeholder="MM/AA" maxlength="5" required
-                      style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;">
-                  </div>
-                  <div>
-                    <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">CVV</label>
-                    <input [(ngModel)]="card.cvv" name="cvv" type="password" placeholder="123" maxlength="4" inputmode="numeric" required
-                      style="width:100%;padding:12px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;">
-                  </div>
-                </div>
-
-                @if (payError) { <p style="color:#C2563B;font-size:13px;margin:0 0 14px;">{{ payError }}</p> }
-
-                <button type="submit" [disabled]="processing"
-                  style="width:100%;padding:13px;border:none;border-radius:11px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-                  @if (processing) { <span>Traitement…</span> } @else {
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 11V8a6 6 0 0 1 12 0v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" stroke-width="1.8"/></svg>
-                    <span>Payer {{ currentRent }}</span>
-                  }
-                </button>
-                <p style="text-align:center;margin:12px 0 0;font-size:11.5px;color:#9AA49E;">🔒 Paiement chiffré — démo, aucune carte réelle n'est débitée.</p>
-              </form>
-            }
-          </div>
-        </div>
-      }
     </div>
   `
 })
@@ -182,13 +122,15 @@ export class LocataireComponent implements OnInit {
   statement: StatementLine[] = [];
   balance = 0;
 
-  showPayment = false;
   processing = false;
-  paid = false;
-  payError = '';
-  card = { holder: '', number: '', expiry: '', cvv: '' };
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  constructor(
+    private api: ApiService,
+    private auth: AuthService,
+    private toast: ToastService,
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {}
 
   get userName(): string {
     const u = this.auth.user;
@@ -196,55 +138,47 @@ export class LocataireComponent implements OnInit {
     return [u.firstName, u.lastName].filter(Boolean).join(' ');
   }
 
-  openPayment() {
-    if (!this.currentProperty?.lease) return;
-    this.showPayment = true;
-    this.paid = false;
-    this.payError = '';
-    this.card = { holder: '', number: '', expiry: '', cvv: '' };
-  }
-
-  closePayment() {
-    this.showPayment = false;
-  }
-
-  formatCardNumber() {
-    const digits = this.card.number.replace(/\D/g, '').slice(0, 16);
-    this.card.number = digits.replace(/(.{4})/g, '$1 ').trim();
-  }
-
-  pay() {
-    this.payError = '';
-    const digits = this.card.number.replace(/\D/g, '');
-    if (!this.card.holder || digits.length < 16 || !this.card.expiry || this.card.cvv.length < 3) {
-      this.payError = 'Veuillez vérifier les informations de votre carte.';
-      return;
-    }
+  /** Démarre le paiement Stripe Checkout : crée la session puis redirige. */
+  startCheckout() {
     const lease = this.currentProperty?.lease;
     if (!lease) return;
-
     this.processing = true;
-    const today = new Date().toISOString().slice(0, 10);
-    this.api.createPayment({
-      leaseId: lease.id,
-      period: today,
-      amount: lease.rentAmount,
-      status: 'PAID',
-      paidDate: today,
-    } as any).subscribe({
-      next: () => {
+    this.api.createCheckout(lease.id).subscribe({
+      next: res => { window.location.href = res.url; },
+      error: (e) => {
         this.processing = false;
-        this.paid = true;
-        if (lease) {
-          this.api.getPayments({ leaseId: lease.id }).subscribe({ next: p => this.payments = p, error: () => {} });
-          this.loadStatement();
-        }
-      },
-      error: () => {
-        this.processing = false;
-        this.payError = 'Le paiement a échoué. Réessayez.';
+        this.toast.error(e?.status === 503
+          ? 'Paiement en ligne indisponible : Stripe n\'est pas configuré.'
+          : 'Impossible de démarrer le paiement.');
       }
     });
+  }
+
+  /** Au retour de Stripe : confirme la session et enregistre le paiement. */
+  private handleStripeReturn() {
+    const params = this.route.snapshot.queryParamMap;
+    const sessionId = params.get('session_id');
+    if (params.get('paid') === '1' && sessionId) {
+      this.api.confirmCheckout(sessionId).subscribe({
+        next: () => {
+          this.toast.success('Paiement reçu — votre quittance sera disponible.');
+          const leaseId = this.currentProperty?.lease?.id;
+          if (leaseId) {
+            this.api.getPayments({ leaseId }).subscribe({ next: p => this.payments = p, error: () => {} });
+          }
+          this.loadStatement();
+        },
+        error: () => {}
+      });
+      this.cleanUrl();
+    } else if (params.get('canceled') === '1') {
+      this.toast.info('Paiement annulé.');
+      this.cleanUrl();
+    }
+  }
+
+  private cleanUrl() {
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
   }
 
   ngOnInit() {
@@ -263,8 +197,10 @@ export class LocataireComponent implements OnInit {
         if (this.currentProperty) {
           this.api.getDocuments({ propertyId: this.currentProperty.id }).subscribe({ next: d => this.documents = d, error: () => {} });
         }
+        // Gère le retour de Stripe une fois le bien/bail chargé.
+        this.handleStripeReturn();
       },
-      error: () => {}
+      error: () => this.handleStripeReturn()
     });
   }
 

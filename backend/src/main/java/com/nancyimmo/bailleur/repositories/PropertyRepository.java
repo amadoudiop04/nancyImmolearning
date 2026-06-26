@@ -17,4 +17,17 @@ public interface PropertyRepository extends JpaRepository<PropertyModel, Long> {
 
 	@EntityGraph(attributePaths = { "building", "landlord", "lease", "lease.tenant" })
 	Optional<PropertyModel> findWithDetailsById(Long id);
+
+	// ─── Isolation par bailleur ───────────────────────────────────────────────
+	@EntityGraph(attributePaths = { "building", "landlord", "lease", "lease.tenant" })
+	List<PropertyModel> findAllWithDetailsByLandlord_Email(String email);
+
+	@EntityGraph(attributePaths = { "building", "landlord", "lease", "lease.tenant" })
+	Optional<PropertyModel> findWithDetailsByIdAndLandlord_Email(Long id, String email);
+
+	List<PropertyModel> findByLandlord_Email(String email);
+
+	Optional<PropertyModel> findByIdAndLandlord_Email(Long id, String email);
+
+	long countByLandlord_Email(String email);
 }

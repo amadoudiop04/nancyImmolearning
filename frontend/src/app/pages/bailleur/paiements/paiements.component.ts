@@ -15,7 +15,7 @@ import { ToastService } from '../../../services/toast.service';
       </div>
 
       <!-- Stats -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px;">
+      <div class="nm-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px;">
         <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#9AA49E;">Encaissé</div>
           <div style="font-size:28px;font-weight:800;margin-top:10px;color:#0E4F4A;">{{ fmt(payStats?.totalPaid) }}</div>
@@ -36,7 +36,7 @@ import { ToastService } from '../../../services/toast.service';
           {{ showForm ? '▲ Masquer' : '+ Enregistrer un paiement' }}
         </button>
         @if (showForm) {
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-top:16px;">
+          <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-top:16px;">
             <div>
               <label style="font-size:12px;font-weight:600;color:#5A655F;margin-bottom:5px;display:block;">Bien</label>
               <select [(ngModel)]="newPay.leaseId" style="width:100%;padding:9px 12px;border:1px solid #D6DED9;border-radius:8px;font-family:inherit;font-size:13px;background:#fff;">

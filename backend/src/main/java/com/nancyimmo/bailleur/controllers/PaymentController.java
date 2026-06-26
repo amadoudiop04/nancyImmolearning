@@ -4,8 +4,12 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Year;
+import java.util.Map;
+
 import com.nancyimmo.bailleur.dto.PaymentDto;
 import com.nancyimmo.bailleur.dto.PaymentStatsDto;
+import com.nancyimmo.bailleur.dto.TenantPaymentHistoryDto;
 import com.nancyimmo.bailleur.services.PaymentService;
 
 @RestController
@@ -35,6 +39,29 @@ public class PaymentController {
     @GetMapping("/stats")
     public PaymentStatsDto getStats() {
         return paymentService.getStats();
+    }
+
+    /** Crée une session Stripe Checkout pour payer un loyer en ligne ; renvoie l'URL. */
+    @PostMapping("/checkout")
+    public Map<String, String> checkout(@RequestBody Map<String, Object> body) {
+        Long leaseId = Long.valueOf(String.valueOf(body.get("leaseId")));
+        String period = body.get("period") != null ? String.valueOf(body.get("period")) : null;
+        return Map.of("url", paymentService.createCheckout(leaseId, period));
+    }
+
+    /** Confirme le retour de Stripe et enregistre le paiement s'il est réglé. */
+    @PostMapping("/confirm")
+    public PaymentDto confirm(@RequestBody Map<String, String> body) {
+        return paymentService.confirmCheckout(body.get("sessionId"));
+    }
+
+    /** Historique annuel des paiements d'un locataire (encaissé / en attente / retard par mois). */
+    @GetMapping("/tenant/{tenantId}/history")
+    public TenantPaymentHistoryDto getTenantHistory(
+            @PathVariable Long tenantId,
+            @RequestParam(required = false) Integer year) {
+        int y = year != null ? year : Year.now().getValue();
+        return paymentService.getTenantYearHistory(tenantId, y);
     }
 
     @GetMapping("/{id}")

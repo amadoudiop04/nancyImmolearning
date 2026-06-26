@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ApiService, Property, Building, Landlord } from '../../../services/api.service';
+import { ApiService, Property, Building } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 
 @Component({
@@ -25,7 +25,7 @@ import { ToastService } from '../../../services/toast.service';
       @if (showForm) {
         <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:24px;margin-bottom:24px;">
           <h2 style="margin:0 0 18px;font-size:16px;font-weight:700;">{{ editingId ? 'Modifier le bien' : 'Nouveau bien' }}</h2>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
             <div>
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Nom du bien</label>
               <input [(ngModel)]="newProp.name" placeholder="Ex: Appartement T3 Foch" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
@@ -52,15 +52,6 @@ import { ToastService } from '../../../services/toast.service';
                 <option [value]="undefined">— Aucun —</option>
                 @for (b of buildings; track b.id) {
                   <option [value]="b.id">{{ b.name }}</option>
-                }
-              </select>
-            </div>
-            <div>
-              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Bailleur</label>
-              <select [(ngModel)]="newProp.landlordId" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;background:#fff;">
-                <option [value]="undefined">— Aucun —</option>
-                @for (l of landlords; track l.id) {
-                  <option [value]="l.id">{{ l.firstName }} {{ l.lastName }}</option>
                 }
               </select>
             </div>
@@ -93,7 +84,7 @@ import { ToastService } from '../../../services/toast.service';
       }
 
       <!-- Properties grid -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
+      <div class="nm-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
         @for (p of properties; track p.id) {
           <div class="nm-card"
             [style.opacity]="removingId === p.id ? '0' : '1'"
@@ -161,7 +152,6 @@ import { ToastService } from '../../../services/toast.service';
 export class BiensComponent implements OnInit {
   properties: any[] = [];
   buildings: Building[] = [];
-  landlords: Landlord[] = [];
   loading = true;
   showForm = false;
   error = '';
@@ -172,7 +162,7 @@ export class BiensComponent implements OnInit {
   constructor(private api: ApiService, private toast: ToastService) {}
 
   private emptyProp(): Partial<Property> {
-    return { name: '', kind: '', size: '', location: '', rent: undefined, description: '', imageUrl: '', buildingId: undefined, landlordId: undefined };
+    return { name: '', kind: '', size: '', location: '', rent: undefined, description: '', imageUrl: '', buildingId: undefined };
   }
 
   openCreate() {
@@ -188,7 +178,7 @@ export class BiensComponent implements OnInit {
     this.newProp = {
       name: p.name, kind: p.kind, size: p.size, location: p.location,
       rent: p.rent ?? p.lease?.rentAmount, description: p.description, imageUrl: p.imageUrl,
-      buildingId: p.building?.id, landlordId: p.landlord?.id,
+      buildingId: p.building?.id,
     };
     this.showForm = true;
     // Le formulaire est en haut de la page : on y remonte pour qu'il soit visible.
@@ -222,7 +212,6 @@ export class BiensComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.api.getBuildings().subscribe({ next: b => this.buildings = b, error: () => {} });
-    this.api.getLandlords().subscribe({ next: l => this.landlords = l, error: () => {} });
   }
 
   load() {

@@ -9,10 +9,10 @@ import { ToastService } from '../../services/toast.service';
   standalone: true,
   imports: [RouterLink, RouterLinkActive, RouterOutlet],
   template: `
-    <div style="display:flex;align-items:flex-start;">
+    <div class="nm-shell" style="display:flex;align-items:flex-start;">
       <!-- Sidebar -->
-      <aside style="position:sticky;top:64px;align-self:flex-start;width:248px;height:calc(100vh - 64px);background:#fff;border-right:1px solid #E4E7E2;padding:22px 16px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#9AA49E;padding:6px 12px 10px;">Gestion</div>
+      <aside class="nm-sidebar" style="position:sticky;top:64px;align-self:flex-start;width:248px;height:calc(100vh - 64px);background:#fff;border-right:1px solid #E4E7E2;padding:22px 16px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;">
+        <div class="nm-side-label" style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#9AA49E;padding:6px 12px 10px;">Gestion</div>
 
         <a routerLink="dashboard" routerLinkActive="sidebar-active" class="sidebar-btn" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#5A655F;font-size:14px;font-weight:500;transition:all .15s;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.7"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.7"/></svg>
@@ -40,7 +40,7 @@ import { ToastService } from '../../services/toast.service';
         </a>
 
         <!-- Compte -->
-        <div style="margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#9AA49E;padding:6px 12px 10px;">Compte</div>
+        <div class="nm-side-label" style="margin-top:18px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#9AA49E;padding:6px 12px 10px;">Compte</div>
         <a routerLink="/profil" routerLinkActive="sidebar-active" class="sidebar-btn" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#5A655F;font-size:14px;font-weight:500;transition:all .15s;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c0-3.3 3-5.5 7-5.5s7 2.2 7 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           Mon profil
@@ -50,7 +50,7 @@ import { ToastService } from '../../services/toast.service';
           Se déconnecter
         </button>
 
-        <div style="margin-top:auto;padding:14px;border-radius:14px;background:#0E4F4A;color:#fff;">
+        <div class="nm-side-promo" style="margin-top:auto;padding:14px;border-radius:14px;background:#0E4F4A;color:#fff;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#7FC9BD;">Automatisation</div>
           <div style="font-size:14px;font-weight:600;margin-top:6px;line-height:1.35;">Quittances générées automatiquement</div>
           <button (click)="genererQuittances()" [disabled]="generating"
@@ -64,7 +64,7 @@ import { ToastService } from '../../services/toast.service';
       </aside>
 
       <!-- Main content -->
-      <main style="flex:1;min-width:0;padding:30px 36px 56px;max-width:1240px;">
+      <main class="nm-main" style="flex:1;min-width:0;padding:30px 36px 56px;max-width:1240px;">
         <router-outlet />
       </main>
     </div>
