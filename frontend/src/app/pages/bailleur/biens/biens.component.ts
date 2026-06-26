@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService, Property, Building, Landlord } from '../../../services/api.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-biens',
@@ -14,16 +15,16 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9AA49E;">Patrimoine</div>
           <h1 style="margin:6px 0 0;font-size:28px;font-weight:800;letter-spacing:-0.02em;">Mes biens</h1>
         </div>
-        <button (click)="showForm=!showForm"
+        <button (click)="openCreate()"
           style="padding:11px 18px;border:none;border-radius:11px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
           + Ajouter un bien
         </button>
       </div>
 
-      <!-- Add form -->
+      <!-- Add / edit form -->
       @if (showForm) {
         <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:24px;margin-bottom:24px;">
-          <h2 style="margin:0 0 18px;font-size:16px;font-weight:700;">Nouveau bien</h2>
+          <h2 style="margin:0 0 18px;font-size:16px;font-weight:700;">{{ editingId ? 'Modifier le bien' : 'Nouveau bien' }}</h2>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
             <div>
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Nom du bien</label>
@@ -64,17 +65,25 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
               </select>
             </div>
             <div style="grid-column:1/3;">
+              <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Photo du bien (URL)</label>
+              <input [(ngModel)]="newProp.imageUrl" placeholder="https://… (lien vers une image)"
+                style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;">
+              @if (newProp.imageUrl) {
+                <img [src]="newProp.imageUrl" alt="aperçu" style="margin-top:10px;width:100%;max-height:160px;object-fit:cover;border-radius:10px;border:1px solid #E4E7E2;">
+              }
+            </div>
+            <div style="grid-column:1/3;">
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Description</label>
               <textarea [(ngModel)]="newProp.description" rows="3" placeholder="Appartement lumineux, balcon, parking…"
                 style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;outline:none;resize:vertical;"></textarea>
             </div>
           </div>
           <div style="display:flex;gap:10px;margin-top:16px;">
-            <button (click)="createProperty()"
+            <button (click)="saveProperty()"
               style="padding:11px 22px;border:none;border-radius:10px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
-              Enregistrer
+              {{ editingId ? 'Enregistrer les modifications' : 'Enregistrer' }}
             </button>
-            <button (click)="showForm=false"
+            <button (click)="cancelForm()"
               style="padding:11px 22px;border:1px solid #D6DED9;border-radius:10px;background:#fff;color:#16201D;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;">
               Annuler
             </button>
@@ -86,9 +95,16 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
       <!-- Properties grid -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;">
         @for (p of properties; track p.id) {
-          <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;overflow:hidden;">
-            <div style="position:relative;height:148px;background:repeating-linear-gradient(45deg,#EDEFEA,#EDEFEA 11px,#E4E7E2 11px,#E4E7E2 22px);display:flex;align-items:flex-end;padding:12px;">
-              <span style="position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:600;"
+          <div class="nm-card"
+            [style.opacity]="removingId === p.id ? '0' : '1'"
+            [style.transform]="removingId === p.id ? 'scale(0.94)' : 'none'"
+            style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;overflow:hidden;transition:opacity .28s ease,transform .28s ease,box-shadow .18s ease,border-color .18s ease;">
+            <div style="position:relative;height:148px;display:flex;align-items:flex-end;padding:12px;overflow:hidden;"
+              [style.background]="p.imageUrl ? '#EDEFEA' : 'repeating-linear-gradient(45deg,#EDEFEA,#EDEFEA 11px,#E4E7E2 11px,#E4E7E2 22px)'">
+              @if (p.imageUrl) {
+                <img [src]="p.imageUrl" alt="{{ p.name }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+              }
+              <span style="position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:999px;font-size:11.5px;font-weight:600;z-index:1;"
                 [style.background]="p.landlord ? '#D1FAE5' : '#F3F4F6'"
                 [style.color]="p.landlord ? '#065F46' : '#6B7280'">
                 {{ p.landlord ? 'Géré' : 'Sans bailleur' }}
@@ -114,8 +130,13 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
                   style="flex:1;padding:9px;border:none;border-radius:10px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;text-decoration:none;text-align:center;">
                   Voir détail
                 </a>
-                <button (click)="deleteProperty(p.id)"
-                  style="padding:9px 14px;border:1px solid #D6DED9;border-radius:10px;background:#fff;color:#C2563B;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">
+                <button (click)="startEdit(p)" title="Modifier" class="nm-edit"
+                  style="padding:9px 14px;border:1px solid #D6DED9;border-radius:10px;background:#fff;color:#0E4F4A;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;">
+                  Modifier
+                </button>
+                <button (click)="deleteProperty(p.id, p.name)" title="Supprimer"
+                  class="nm-del"
+                  style="padding:9px 14px;border:1px solid #D6DED9;border-radius:10px;background:#fff;color:#C2563B;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:all .15s;">
                   ✕
                 </button>
               </div>
@@ -129,6 +150,12 @@ import { ApiService, Property, Building, Landlord } from '../../../services/api.
         }
       </div>
     </div>
+
+    <style>
+      .nm-card:hover { box-shadow:0 14px 30px rgba(14,79,74,0.10); border-color:#CFE0DA; }
+      .nm-del:hover { background:#FBE7DF; border-color:#E4C8C0; }
+      .nm-edit:hover { background:#E7F1EF; border-color:#CFE0DA; }
+    </style>
   `
 })
 export class BiensComponent implements OnInit {
@@ -138,9 +165,59 @@ export class BiensComponent implements OnInit {
   loading = true;
   showForm = false;
   error = '';
+  removingId: number | null = null;
+  editingId: number | null = null;
   newProp: Partial<Property> = { name: '', kind: '', size: '', location: '' };
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private toast: ToastService) {}
+
+  private emptyProp(): Partial<Property> {
+    return { name: '', kind: '', size: '', location: '', rent: undefined, description: '', imageUrl: '', buildingId: undefined, landlordId: undefined };
+  }
+
+  openCreate() {
+    this.editingId = null;
+    this.error = '';
+    this.newProp = this.emptyProp();
+    this.showForm = !this.showForm;
+  }
+
+  startEdit(p: any) {
+    this.editingId = p.id;
+    this.error = '';
+    this.newProp = {
+      name: p.name, kind: p.kind, size: p.size, location: p.location,
+      rent: p.rent ?? p.lease?.rentAmount, description: p.description, imageUrl: p.imageUrl,
+      buildingId: p.building?.id, landlordId: p.landlord?.id,
+    };
+    this.showForm = true;
+    // Le formulaire est en haut de la page : on y remonte pour qu'il soit visible.
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+  }
+
+  cancelForm() {
+    this.showForm = false;
+    this.editingId = null;
+    this.newProp = this.emptyProp();
+    this.error = '';
+  }
+
+  saveProperty() {
+    this.error = '';
+    if (!this.newProp.name) { this.error = 'Le nom est requis.'; return; }
+
+    if (this.editingId) {
+      this.api.updateProperty(this.editingId, this.newProp).subscribe({
+        next: () => { this.cancelForm(); this.toast.success('Bien modifié'); this.load(); },
+        error: () => { this.error = 'Erreur lors de la modification.'; this.toast.error('Impossible de modifier le bien'); }
+      });
+    } else {
+      this.api.createProperty(this.newProp as any).subscribe({
+        next: () => { this.cancelForm(); this.toast.success('Bien ajouté'); this.load(); },
+        error: () => { this.error = 'Erreur lors de la création.'; this.toast.error('Impossible d\'ajouter le bien'); }
+      });
+    }
+  }
 
   ngOnInit() {
     this.load();
@@ -156,18 +233,17 @@ export class BiensComponent implements OnInit {
     });
   }
 
-  createProperty() {
-    this.error = '';
-    if (!this.newProp.name) { this.error = 'Le nom est requis.'; return; }
-    this.api.createProperty(this.newProp as any).subscribe({
-      next: () => { this.showForm = false; this.newProp = { name: '', kind: '', size: '', location: '' }; this.load(); },
-      error: () => this.error = 'Erreur lors de la création.'
-    });
-  }
-
-  deleteProperty(id: number) {
+  deleteProperty(id: number, name?: string) {
     if (!confirm('Supprimer ce bien ?')) return;
-    this.api.deleteProperty(id).subscribe({ next: () => this.load(), error: () => {} });
+    this.removingId = id;
+    this.api.deleteProperty(id).subscribe({
+      next: () => {
+        this.toast.success(name ? `« ${name} » supprimé` : 'Bien supprimé');
+        // Laisse l'animation de disparition se jouer avant le rechargement.
+        setTimeout(() => { this.removingId = null; this.load(); }, 280);
+      },
+      error: () => { this.removingId = null; this.toast.error('Suppression impossible'); }
+    });
   }
 
   formatRent(amount: number, currency: string): string {

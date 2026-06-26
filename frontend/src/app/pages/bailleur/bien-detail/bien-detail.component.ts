@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService, PropertyDetails, Document, Lease, Tenant } from '../../../services/api.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-bien-detail',
@@ -16,8 +17,13 @@ import { ApiService, PropertyDetails, Document, Lease, Tenant } from '../../../s
       } @else {
         <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;">
           <div>
-            <div style="position:relative;height:240px;border-radius:18px;background:repeating-linear-gradient(45deg,#EDEFEA,#EDEFEA 13px,#E4E7E2 13px,#E4E7E2 26px);display:flex;align-items:flex-end;padding:16px;">
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA49E;background:#fff;padding:3px 9px;border-radius:6px;">galerie photos du bien</span>
+            <div style="position:relative;height:240px;border-radius:18px;overflow:hidden;display:flex;align-items:flex-end;padding:16px;"
+              [style.background]="property.imageUrl ? '#EDEFEA' : 'repeating-linear-gradient(45deg,#EDEFEA,#EDEFEA 13px,#E4E7E2 13px,#E4E7E2 26px)'">
+              @if (property.imageUrl) {
+                <img [src]="property.imageUrl" alt="{{ property.name }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+              } @else {
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9AA49E;background:#fff;padding:3px 9px;border-radius:6px;">galerie photos du bien</span>
+              }
             </div>
             <h1 style="margin:18px 0 4px;font-size:26px;font-weight:800;letter-spacing:-0.02em;">{{ property.name }}</h1>
             <div style="font-size:14px;color:#8A938E;">{{ property.location }}</div>
@@ -137,24 +143,51 @@ import { ApiService, PropertyDetails, Document, Lease, Tenant } from '../../../s
 
             @if (property.lease) {
               <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;margin-top:16px;">
-                <div style="font-size:15px;font-weight:700;margin-bottom:14px;">Situation de compte</div>
-                <div style="display:flex;align-items:baseline;gap:8px;">
-                  <span style="font-size:30px;font-weight:800;color:#2A9D8F;letter-spacing:-0.02em;">{{ formatRent(property.lease.rentAmount, property.lease.currency) }}</span>
-                  <span style="font-size:13px;color:#2A9D8F;font-weight:600;">/mois</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                  <div style="font-size:15px;font-weight:700;">Contrat de bail</div>
+                  @if (!editingLease) {
+                    <button (click)="startEditLease()" style="border:1px solid #D6DED9;background:#fff;color:#0E4F4A;border-radius:8px;font-family:inherit;font-weight:600;font-size:12px;padding:5px 11px;cursor:pointer;">Modifier</button>
+                  }
                 </div>
-                <div style="margin-top:16px;display:flex;flex-direction:column;gap:11px;">
-                  <div style="display:flex;justify-content:space-between;font-size:13px;">
-                    <span style="color:#5A655F;">Date de début</span>
-                    <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;">{{ property.lease.startDate }}</span>
+
+                @if (!editingLease) {
+                  <div style="display:flex;align-items:baseline;gap:8px;">
+                    <span style="font-size:30px;font-weight:800;color:#2A9D8F;letter-spacing:-0.02em;">{{ formatRent(property.lease.rentAmount, property.lease.currency) }}</span>
+                    <span style="font-size:13px;color:#2A9D8F;font-weight:600;">/mois</span>
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:13px;">
-                    <span style="color:#5A655F;">Date de fin</span>
-                    <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;">{{ property.lease.endDate }}</span>
+                  <div style="margin-top:16px;display:flex;flex-direction:column;gap:11px;">
+                    <div style="display:flex;justify-content:space-between;font-size:13px;">
+                      <span style="color:#5A655F;">Date de début</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;">{{ property.lease.startDate }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:13px;">
+                      <span style="color:#5A655F;">Date de fin</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;">{{ property.lease.endDate }}</span>
+                    </div>
                   </div>
-                </div>
-                <button (click)="deleteLease()" style="margin-top:14px;width:100%;padding:9px;border:1px solid #C2563B;border-radius:8px;background:#fff;color:#C2563B;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">
-                  Résilier le bail
-                </button>
+                  <button (click)="deleteLease()" style="margin-top:14px;width:100%;padding:9px;border:1px solid #C2563B;border-radius:8px;background:#fff;color:#C2563B;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">
+                    Résilier le bail
+                  </button>
+                } @else {
+                  <div style="display:flex;flex-direction:column;gap:11px;">
+                    <div>
+                      <label style="font-size:12px;font-weight:600;color:#5A655F;margin-bottom:5px;display:block;">Loyer (€)</label>
+                      <input type="number" [(ngModel)]="leaseEdit.rentAmount" style="width:100%;padding:9px 12px;border:1px solid #D6DED9;border-radius:8px;font-family:inherit;font-size:13px;">
+                    </div>
+                    <div>
+                      <label style="font-size:12px;font-weight:600;color:#5A655F;margin-bottom:5px;display:block;">Date de début</label>
+                      <input type="date" [(ngModel)]="leaseEdit.startDate" style="width:100%;padding:9px 12px;border:1px solid #D6DED9;border-radius:8px;font-family:inherit;font-size:13px;">
+                    </div>
+                    <div>
+                      <label style="font-size:12px;font-weight:600;color:#5A655F;margin-bottom:5px;display:block;">Date de fin</label>
+                      <input type="date" [(ngModel)]="leaseEdit.endDate" style="width:100%;padding:9px 12px;border:1px solid #D6DED9;border-radius:8px;font-family:inherit;font-size:13px;">
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:9px;margin-top:14px;">
+                    <button (click)="saveLease()" style="flex:1;padding:9px;border:none;border-radius:8px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">Enregistrer</button>
+                    <button (click)="editingLease=false" style="padding:9px 14px;border:1px solid #D6DED9;border-radius:8px;background:#fff;color:#16201D;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;">Annuler</button>
+                  </div>
+                }
               </div>
             }
 
@@ -178,9 +211,11 @@ export class BiensDetailComponent implements OnInit {
   showDocForm = false;
   newDoc: any = { name: '', docType: 'OTHER' };
   newLease: any = { startDate: '', endDate: '', rentAmount: 0, currency: 'EUR' };
+  editingLease = false;
+  leaseEdit: any = { startDate: '', endDate: '', rentAmount: 0 };
   propertyId!: number;
 
-  constructor(private route: ActivatedRoute, private api: ApiService) {}
+  constructor(private route: ActivatedRoute, private api: ApiService, private toast: ToastService) {}
 
   ngOnInit() {
     this.propertyId = +this.route.snapshot.paramMap.get('id')!;
@@ -214,15 +249,37 @@ export class BiensDetailComponent implements OnInit {
 
   createLease() {
     this.api.createLease({ ...this.newLease, propertyId: this.propertyId }).subscribe({
-      next: () => this.load(),
-      error: () => {}
+      next: () => { this.toast.success('Bail créé'); this.load(); },
+      error: () => this.toast.error('Impossible de créer le bail')
+    });
+  }
+
+  startEditLease() {
+    if (!this.property?.lease) return;
+    this.editingLease = true;
+    this.leaseEdit = {
+      startDate: this.property.lease.startDate,
+      endDate: this.property.lease.endDate,
+      rentAmount: this.property.lease.rentAmount,
+      currency: this.property.lease.currency ?? 'EUR',
+    };
+  }
+
+  saveLease() {
+    if (!this.property?.lease) return;
+    this.api.updateLease(this.property.lease.id, this.leaseEdit).subscribe({
+      next: () => { this.editingLease = false; this.toast.success('Bail modifié'); this.load(); },
+      error: () => this.toast.error('Impossible de modifier le bail')
     });
   }
 
   deleteLease() {
     if (!this.property?.lease) return;
     if (!confirm('Résilier ce bail ?')) return;
-    this.api.deleteLease(this.property.lease.id).subscribe({ next: () => this.load(), error: () => {} });
+    this.api.deleteLease(this.property.lease.id).subscribe({
+      next: () => { this.toast.success('Bail résilié'); this.load(); },
+      error: () => this.toast.error('Impossible de résilier le bail')
+    });
   }
 
   formatRent(amount?: number, currency?: string): string {

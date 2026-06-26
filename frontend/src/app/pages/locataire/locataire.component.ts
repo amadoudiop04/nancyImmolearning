@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ApiService, PropertyDetails, Payment, Document } from '../../services/api.service';
+import { ApiService, PropertyDetails, Payment, Document, StatementLine } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
       <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;">
         <div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9AA49E;">Espace locataire</div>
-          <h1 style="margin:6px 0 0;font-size:28px;font-weight:800;letter-spacing:-0.02em;">Bonjour, Thomas</h1>
+          <h1 style="margin:6px 0 0;font-size:28px;font-weight:800;letter-spacing:-0.02em;">Bonjour, {{ userName }}</h1>
           <p style="margin:6px 0 0;color:#5A655F;font-size:15px;">{{ currentProperty?.location ?? 'Aucun bien associé' }}</p>
         </div>
       </div>
@@ -35,26 +35,32 @@ import { AuthService } from '../../services/auth.service';
             </button>
           </div>
 
-          <!-- Paiements -->
+          <!-- Situation de compte (débit / crédit / solde) -->
           <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:22px;margin-top:18px;">
-            <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Historique des paiements</div>
-            @for (p of payments; track p.id) {
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #F2F4F0;font-size:13px;">
-                <div>
-                  <div style="font-weight:500;">{{ p.propertyName ?? 'Loyer' }} — {{ formatPeriod(p.period) }}</div>
-                  <div style="font-size:11px;color:#9AA49E;">{{ p.paidDate ? 'Payé le ' + p.paidDate : '' }}</div>
-                </div>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;">{{ fmt(p.amount) }}</span>
-                  <span [style.background]="badgeBg(p.status)" [style.color]="badgeFg(p.status)"
-                    style="padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;">
-                    {{ statusLabel(p.status) }}
-                  </span>
-                </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+              <div style="font-size:16px;font-weight:700;">Situation de compte</div>
+              <span [style.background]="balance > 0 ? '#FBE7DF' : '#D1FAE5'" [style.color]="balance > 0 ? '#C2563B' : '#065F46'"
+                style="padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;">
+                {{ balance > 0 ? 'Solde dû : ' + fmt(balance) : 'À jour' }}
+              </span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:64px 1fr 92px 92px 96px;gap:10px;padding:10px 0;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:#9AA49E;border-bottom:1px solid #EEF1ED;">
+              <span>Date</span><span>Libellé</span>
+              <span style="text-align:right;">Débit</span><span style="text-align:right;">Crédit</span><span style="text-align:right;">Solde</span>
+            </div>
+
+            @for (l of statement; track $index) {
+              <div class="nm-stmt-row" style="display:grid;grid-template-columns:64px 1fr 92px 92px 96px;gap:10px;padding:12px 0;border-bottom:1px solid #F2F4F0;font-size:13px;align-items:center;transition:background .15s;">
+                <span style="font-family:'IBM Plex Mono',monospace;color:#9AA49E;font-size:12px;">{{ shortDate(l.date) }}</span>
+                <span style="font-weight:500;">{{ l.label }}</span>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;color:#C2563B;">{{ l.debit ? fmt(l.debit) : '' }}</span>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;color:#2A9D8F;">{{ l.credit ? fmt(l.credit) : '' }}</span>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600;">{{ fmt(l.balance) }}</span>
               </div>
             }
-            @if (payments.length === 0) {
-              <p style="color:#9AA49E;font-size:13px;">Aucun historique de paiement.</p>
+            @if (statement.length === 0) {
+              <p style="color:#9AA49E;font-size:13px;margin-top:12px;">Aucun mouvement de compte.</p>
             }
           </div>
 
@@ -82,8 +88,13 @@ import { AuthService } from '../../services/auth.service';
         <div>
           @if (currentProperty) {
             <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;">
-              <div style="position:relative;height:130px;border-radius:13px;background:repeating-linear-gradient(45deg,#EDEFEA,#EDEFEA 11px,#E4E7E2 11px,#E4E7E2 22px);display:flex;align-items:flex-end;padding:11px;">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA49E;background:#fff;padding:2px 7px;border-radius:5px;">photo du logement</span>
+              <div style="position:relative;height:130px;border-radius:13px;overflow:hidden;display:flex;align-items:flex-end;padding:11px;"
+                [style.background]="currentProperty.imageUrl ? '#EDEFEA' : 'repeating-linear-gradient(45deg,#EDEFEA,#EDEFEA 11px,#E4E7E2 11px,#E4E7E2 22px)'">
+                @if (currentProperty.imageUrl) {
+                  <img [src]="currentProperty.imageUrl" alt="logement" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+                } @else {
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9AA49E;background:#fff;padding:2px 7px;border-radius:5px;">photo du logement</span>
+                }
               </div>
               <div style="font-weight:700;font-size:16px;margin-top:14px;">{{ currentProperty.name }}</div>
               <div style="font-size:13px;color:#8A938E;margin-top:3px;">{{ currentProperty.kind }} · {{ currentProperty.size }} · {{ currentProperty.location }}</div>
@@ -168,6 +179,8 @@ export class LocataireComponent implements OnInit {
   currentProperty: PropertyDetails | null = null;
   payments: Payment[] = [];
   documents: Document[] = [];
+  statement: StatementLine[] = [];
+  balance = 0;
 
   showPayment = false;
   processing = false;
@@ -176,6 +189,12 @@ export class LocataireComponent implements OnInit {
   card = { holder: '', number: '', expiry: '', cvv: '' };
 
   constructor(private api: ApiService, private auth: AuthService) {}
+
+  get userName(): string {
+    const u = this.auth.user;
+    if (!u) return '';
+    return [u.firstName, u.lastName].filter(Boolean).join(' ');
+  }
 
   openPayment() {
     if (!this.currentProperty?.lease) return;
@@ -218,6 +237,7 @@ export class LocataireComponent implements OnInit {
         this.paid = true;
         if (lease) {
           this.api.getPayments({ leaseId: lease.id }).subscribe({ next: p => this.payments = p, error: () => {} });
+          this.loadStatement();
         }
       },
       error: () => {
@@ -238,6 +258,7 @@ export class LocataireComponent implements OnInit {
           ?? null;
         if (this.currentProperty?.lease) {
           this.api.getPayments({ leaseId: this.currentProperty.lease.id }).subscribe({ next: p => this.payments = p, error: () => {} });
+          this.loadStatement();
         }
         if (this.currentProperty) {
           this.api.getDocuments({ propertyId: this.currentProperty.id }).subscribe({ next: d => this.documents = d, error: () => {} });
@@ -245,6 +266,24 @@ export class LocataireComponent implements OnInit {
       },
       error: () => {}
     });
+  }
+
+  loadStatement() {
+    const leaseId = this.currentProperty?.lease?.id;
+    if (!leaseId) return;
+    this.api.getStatement(leaseId).subscribe({
+      next: lines => {
+        this.statement = lines;
+        this.balance = lines.length ? lines[lines.length - 1].balance : 0;
+      },
+      error: () => {}
+    });
+  }
+
+  shortDate(date: string): string {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
   }
 
   get currentRent(): string {

@@ -37,9 +37,20 @@ public class LandlordService {
     }
 
     public LandlordDto update(Long id, LandlordDto landlordDto) {
-        LandlordModel model = toEntity(landlordDto);
-        model.setId(id);
-        return toDto(landlordRepository.save(model));
+        // On charge l'existant pour NE PAS écraser le mot de passe (absent du DTO).
+        return landlordRepository.findById(id)
+                .map(existing -> {
+                    existing.setFirstName(landlordDto.getFirstName());
+                    existing.setLastName(landlordDto.getLastName());
+                    existing.setEmail(landlordDto.getEmail());
+                    existing.setPhone(landlordDto.getPhone());
+                    existing.setStreet(landlordDto.getStreet());
+                    existing.setCity(landlordDto.getCity());
+                    existing.setZipCode(landlordDto.getZipCode());
+                    existing.setCountry(landlordDto.getCountry());
+                    return toDto(landlordRepository.save(existing));
+                })
+                .orElse(null);
     }
 
     private LandlordDto toDto(LandlordModel model) {

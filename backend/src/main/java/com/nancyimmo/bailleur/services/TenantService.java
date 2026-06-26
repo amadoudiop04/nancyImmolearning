@@ -3,6 +3,9 @@ package com.nancyimmo.bailleur.services;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.nancyimmo.bailleur.repositories.DocumentRepository;
+import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.TenantRepository;
 import com.nancyimmo.bailleur.dto.TenantDto;
 import com.nancyimmo.bailleur.models.TenantModel;
@@ -12,9 +15,15 @@ import java.util.stream.Collectors;
 public class TenantService {
 
     private final TenantRepository tenantRepository;
+    private final LeaseRepository leaseRepository;
+    private final DocumentRepository documentRepository;
 
-    public TenantService(TenantRepository tenantRepository) {
+    public TenantService(TenantRepository tenantRepository,
+            LeaseRepository leaseRepository,
+            DocumentRepository documentRepository) {
         this.tenantRepository = tenantRepository;
+        this.leaseRepository = leaseRepository;
+        this.documentRepository = documentRepository;
     }
 
     public TenantDto create(TenantDto dto) {
@@ -35,7 +44,17 @@ public class TenantService {
         return toDto(tenantRepository.save(tenant));
     }
 
+    @Transactional
     public void delete(Long id) {
+        // Détache le locataire des baux (le bien redevient vacant) et des documents.
+        leaseRepository.findByTenantId(id).forEach(lease -> {
+            lease.setTenant(null);
+            leaseRepository.save(lease);
+        });
+        documentRepository.findByTenantId(id).forEach(doc -> {
+            doc.setTenant(null);
+            documentRepository.save(doc);
+        });
         tenantRepository.deleteById(id);
     }
 

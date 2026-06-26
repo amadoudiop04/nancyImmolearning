@@ -1,6 +1,7 @@
 package com.nancyimmo.bailleur.services;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,10 @@ import com.nancyimmo.bailleur.models.LeaseModel;
 import com.nancyimmo.bailleur.models.PropertyModel;
 import com.nancyimmo.bailleur.models.TenantModel;
 import com.nancyimmo.bailleur.repositories.BuildingRepository;
+import com.nancyimmo.bailleur.repositories.DocumentRepository;
 import com.nancyimmo.bailleur.repositories.LandlordRepository;
+import com.nancyimmo.bailleur.repositories.LeaseRepository;
+import com.nancyimmo.bailleur.repositories.PaymentRepository;
 import com.nancyimmo.bailleur.repositories.PropertyRepository;
 
 @Service
@@ -21,13 +25,22 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final BuildingRepository buildingRepository;
     private final LandlordRepository landlordRepository;
+    private final DocumentRepository documentRepository;
+    private final LeaseRepository leaseRepository;
+    private final PaymentRepository paymentRepository;
 
     public PropertyService(PropertyRepository propertyRepository,
             BuildingRepository buildingRepository,
-            LandlordRepository landlordRepository) {
+            LandlordRepository landlordRepository,
+            DocumentRepository documentRepository,
+            LeaseRepository leaseRepository,
+            PaymentRepository paymentRepository) {
         this.propertyRepository = propertyRepository;
         this.buildingRepository = buildingRepository;
         this.landlordRepository = landlordRepository;
+        this.documentRepository = documentRepository;
+        this.leaseRepository = leaseRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     public PropertyDto create(PropertyDto dto) {
@@ -85,6 +98,9 @@ public class PropertyService {
                     if (dto.getDescription() != null) {
                         existing.setDescription(dto.getDescription());
                     }
+                    if (dto.getImageUrl() != null) {
+                        existing.setImageUrl(dto.getImageUrl());
+                    }
                     if (dto.getBuildingId() != null) {
                         buildingRepository.findById(dto.getBuildingId()).ifPresent(existing::setBuilding);
                     }
@@ -96,7 +112,16 @@ public class PropertyService {
                 .orElse(null);
     }
 
+    @Transactional
     public void delete(Long id) {
+        // Supprime d'abord les enregistrements dépendants pour éviter les violations de clé étrangère.
+        documentRepository.deleteAll(documentRepository.findByPropertyId(id));
+
+        leaseRepository.findByPropertyId(id).ifPresent(lease -> {
+            paymentRepository.deleteAll(paymentRepository.findByLeaseId(lease.getId()));
+            leaseRepository.delete(lease);
+        });
+
         propertyRepository.deleteById(id);
     }
 
@@ -108,6 +133,7 @@ public class PropertyService {
                 model.getKind(),
                 model.getLocation());
         dto.setDescription(model.getDescription());
+        dto.setImageUrl(model.getImageUrl());
         dto.setRent(model.getRent());
         dto.setBuildingId(model.getBuilding() != null ? model.getBuilding().getId() : null);
         dto.setLandlordId(model.getLandlord() != null ? model.getLandlord().getId() : null);
@@ -123,6 +149,7 @@ public class PropertyService {
         model.setLocation(dto.getLocation());
         // La colonne "description" existante est NOT NULL : on garantit une valeur non nulle.
         model.setDescription(dto.getDescription() != null ? dto.getDescription() : "");
+        model.setImageUrl(dto.getImageUrl());
         model.setRent(dto.getRent());
         return model;
     }
@@ -135,6 +162,7 @@ public class PropertyService {
         dto.setKind(model.getKind());
         dto.setLocation(model.getLocation());
         dto.setDescription(model.getDescription());
+        dto.setImageUrl(model.getImageUrl());
         dto.setRent(model.getRent());
 
         dto.setBuilding(toBuildingInfo(model.getBuilding()));

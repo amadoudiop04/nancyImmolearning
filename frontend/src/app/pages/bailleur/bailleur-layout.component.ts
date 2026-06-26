@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-bailleur-layout',
@@ -24,6 +25,10 @@ import { AuthService } from '../../services/auth.service';
         <a routerLink="locataires" routerLinkActive="sidebar-active" class="sidebar-btn" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#5A655F;font-size:14px;font-weight:500;transition:all .15s;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 6.5a3 3 0 0 1 0 5.8M17 19c0-2.3-1-4-2.5-4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           Locataires
+        </a>
+        <a routerLink="candidatures" routerLinkActive="sidebar-active" class="sidebar-btn" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#5A655F;font-size:14px;font-weight:500;transition:all .15s;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/></svg>
+          Candidatures
         </a>
         <a routerLink="paiements" routerLinkActive="sidebar-active" class="sidebar-btn" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-decoration:none;color:#5A655F;font-size:14px;font-weight:500;transition:all .15s;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 9.5h18" stroke="currentColor" stroke-width="1.7"/><path d="M6.5 14.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -74,7 +79,7 @@ export class BailleurLayoutComponent {
   generating = false;
   genMessage = '';
 
-  constructor(private api: ApiService, private router: Router, private auth: AuthService) {}
+  constructor(private api: ApiService, private router: Router, private auth: AuthService, private toast: ToastService) {}
 
   logout() {
     this.auth.logout();
@@ -90,11 +95,13 @@ export class BailleurLayoutComponent {
         this.genMessage = docs.length
           ? `${docs.length} quittance(s) générée(s).`
           : 'Toutes les quittances du mois existent déjà.';
+        this.toast.success(this.genMessage);
         this.router.navigate(['/bailleur/documents']);
       },
       error: () => {
         this.generating = false;
         this.genMessage = 'Erreur lors de la génération.';
+        this.toast.error('Erreur lors de la génération');
       }
     });
   }

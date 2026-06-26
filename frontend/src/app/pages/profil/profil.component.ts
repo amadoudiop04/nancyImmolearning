@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService, Landlord, PropertyDetails } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-profil',
@@ -133,7 +134,7 @@ export class ProfilComponent implements OnInit {
     { key: 'applications', title: 'Nouvelles candidatures', sub: 'Dossiers déposés sur vos biens', on: false },
   ];
 
-  constructor(private api: ApiService, private auth: AuthService, private router: Router) {}
+  constructor(private api: ApiService, private auth: AuthService, private router: Router, private toast: ToastService) {}
 
   ngOnInit() {
     // Identifie le bailleur via la session sécurisée (JWT) : /api/auth/me.
@@ -195,11 +196,13 @@ export class ProfilComponent implements OnInit {
         this.landlord = updated;
         this.saving = false;
         this.savedMessage = 'Modifications enregistrées ✓';
+        this.toast.success('Profil mis à jour');
         setTimeout(() => this.savedMessage = '', 2500);
       },
       error: () => {
         this.saving = false;
         this.savedMessage = '';
+        this.toast.error('Échec de l\'enregistrement');
       }
     });
   }

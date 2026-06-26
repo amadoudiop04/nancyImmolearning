@@ -21,7 +21,7 @@ import { AuthService } from '../../services/auth.service';
           <h2 style="font-size:38px;line-height:1.1;font-weight:800;letter-spacing:-0.02em;margin:0;">La gestion locative,<br>enfin entre vos mains.</h2>
           <p style="font-size:16px;color:#BFE0D9;line-height:1.6;margin:18px 0 0;max-width:380px;">Biens, locataires, paiements et quittances réunis dans une seule interface. Sans agence, sans commission.</p>
           <div style="display:flex;gap:28px;margin-top:34px;">
-            <div><div style="font-size:24px;font-weight:800;">2 500+</div><div style="font-size:13px;color:#7FC9BD;">biens gérés</div></div>
+            <div><div style="font-size:24px;font-weight:800;">15+</div><div style="font-size:13px;color:#7FC9BD;">biens gérés</div></div>
             <div><div style="font-size:24px;font-weight:800;">0%</div><div style="font-size:13px;color:#7FC9BD;">commission</div></div>
             <div><div style="font-size:24px;font-weight:800;">12 min</div><div style="font-size:13px;color:#7FC9BD;">pour démarrer</div></div>
           </div>

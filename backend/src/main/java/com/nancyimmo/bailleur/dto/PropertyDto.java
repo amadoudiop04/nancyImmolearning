@@ -10,6 +10,7 @@ public class PropertyDto {
     private String kind;
     private String location;
     private String description;
+    private String imageUrl;
     private BigDecimal rent;
     private Long buildingId;
     private Long landlordId;
@@ -42,6 +43,9 @@ public class PropertyDto {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public BigDecimal getRent() { return rent; }
     public void setRent(BigDecimal rent) { this.rent = rent; }

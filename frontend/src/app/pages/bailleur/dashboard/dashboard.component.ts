@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiService, DashboardStats, PropertyDetails } from '../../../services/api.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,7 +12,7 @@ import { ApiService, DashboardStats, PropertyDetails } from '../../../services/a
       <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:26px;">
         <div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9AA49E;">Vue d'ensemble</div>
-          <h1 style="margin:6px 0 0;font-size:30px;font-weight:800;letter-spacing:-0.02em;">Bonjour, Nancy</h1>
+          <h1 style="margin:6px 0 0;font-size:30px;font-weight:800;letter-spacing:-0.02em;">Bonjour, {{ landlordName }}</h1>
           <p style="margin:6px 0 0;color:#5A655F;font-size:15px;">Voici l'état de votre patrimoine immobilier en temps réel.</p>
         </div>
         <a routerLink="../biens"
@@ -23,23 +24,23 @@ import { ApiService, DashboardStats, PropertyDetails } from '../../../services/a
       <!-- KPIs -->
       @if (stats) {
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px;">
-          <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;">
+          <div class="nm-kpi" style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;transition:transform .18s ease,box-shadow .18s ease;">
             <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#9AA49E;">Biens gérés</div>
-            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ stats.totalProperties }}</div>
+            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ animProperties }}</div>
           </div>
-          <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;">
+          <div class="nm-kpi" style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;transition:transform .18s ease,box-shadow .18s ease;">
             <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#9AA49E;">Locataires actifs</div>
-            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ stats.activeTenants }}</div>
+            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ animTenants }}</div>
           </div>
-          <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;">
+          <div class="nm-kpi" style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:20px;transition:transform .18s ease,box-shadow .18s ease;">
             <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#9AA49E;">Revenus mensuels</div>
-            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ formatRevenue(stats.monthlyRevenue) }}</div>
+            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ formatRevenue(animRevenue) }}</div>
           </div>
-          <div style="background:#0E4F4A;border:1px solid #0E4F4A;border-radius:16px;padding:20px;color:#fff;">
+          <div class="nm-kpi" style="background:#0E4F4A;border:1px solid #0E4F4A;border-radius:16px;padding:20px;color:#fff;transition:transform .18s ease,box-shadow .18s ease;">
             <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#7FC9BD;">Taux d'occupation</div>
-            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ stats.occupancyRate }}%</div>
+            <div style="font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-top:10px;">{{ animOccupancy }}%</div>
             <div style="margin-top:10px;height:6px;border-radius:6px;background:rgba(255,255,255,0.18);overflow:hidden;">
-              <div [style.width]="stats.occupancyRate + '%'" style="height:100%;background:#2A9D8F;"></div>
+              <div [style.width]="animOccupancy + '%'" style="height:100%;background:#2A9D8F;transition:width .4s ease;"></div>
             </div>
           </div>
         </div>
@@ -77,19 +78,54 @@ import { ApiService, DashboardStats, PropertyDetails } from '../../../services/a
         }
       </div>
     </div>
+
+    <style>
+      .nm-kpi:hover { transform: translateY(-3px); box-shadow:0 14px 30px rgba(14,79,74,0.12); }
+    </style>
   `
 })
 export class DashboardComponent implements OnInit {
   stats: DashboardStats | null = null;
   properties: PropertyDetails[] = [];
 
+  animProperties = 0;
+  animTenants = 0;
+  animRevenue = 0;
+  animOccupancy = 0;
+
   private colors = ['#0E4F4A', '#2A9D8F', '#264653', '#E76F51', '#E9C46A'];
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
+
+  get landlordName(): string {
+    const u = this.auth.user;
+    if (!u) return 'bailleur';
+    return [u.firstName, u.lastName].filter(Boolean).join(' ') || 'bailleur';
+  }
 
   ngOnInit() {
-    this.api.getDashboardStats().subscribe({ next: s => this.stats = s, error: () => {} });
+    this.api.getDashboardStats().subscribe({
+      next: s => { this.stats = s; this.animateCounters(s); },
+      error: () => {}
+    });
     this.api.getPropertyDetails().subscribe({ next: p => this.properties = p, error: () => {} });
+  }
+
+  /** Compte progressif des KPI (ease-out) pour un effet vivant. */
+  private animateCounters(s: DashboardStats) {
+    const duration = 900;
+    const start = performance.now();
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / duration);
+      const e = ease(p);
+      this.animProperties = Math.round(s.totalProperties * e);
+      this.animTenants = Math.round(s.activeTenants * e);
+      this.animRevenue = Math.round(s.monthlyRevenue * e);
+      this.animOccupancy = Math.round(s.occupancyRate * e);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   initials(tenant?: PropertyDetails['tenant']): string {

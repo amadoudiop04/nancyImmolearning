@@ -13,10 +13,10 @@ export interface Landlord {
 }
 export interface Property {
   id: number; name: string; size: string; kind: string; location: string;
-  description?: string; rent?: number; buildingId?: number; landlordId?: number;
+  description?: string; imageUrl?: string; rent?: number; buildingId?: number; landlordId?: number;
 }
 export interface PropertyDetails {
-  id: number; name: string; size: string; kind: string; location: string; description?: string; rent?: number;
+  id: number; name: string; size: string; kind: string; location: string; description?: string; imageUrl?: string; rent?: number;
   building?: { id: number; name: string; street: string; city: string; zipCode: string; country: string };
   landlord?: { id: number; firstName: string; lastName: string; email: string; phone: number };
   lease?: { id: number; startDate: string; endDate: string; rentAmount: number; currency: string };
@@ -43,6 +43,14 @@ export interface Document {
 }
 export interface DashboardStats {
   totalProperties: number; activeTenants: number; monthlyRevenue: number; occupancyRate: number;
+}
+export interface StatementLine {
+  date: string; label: string; debit: number | null; credit: number | null; balance: number;
+}
+export interface Application {
+  id: number; propertyId?: number; propertyName?: string;
+  firstName: string; lastName: string; email: string; phone?: string;
+  message?: string; status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | string; createdAt?: string;
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -88,6 +96,17 @@ export class ApiService {
   createLease(l: Omit<Lease, 'id'>): Observable<Lease> { return this.http.post<Lease>(`${this.api}/leases`, l); }
   updateLease(id: number, l: Partial<Lease>): Observable<Lease> { return this.http.put<Lease>(`${this.api}/leases/${id}`, l); }
   deleteLease(id: number): Observable<void> { return this.http.delete<void>(`${this.api}/leases/${id}`); }
+  getStatement(leaseId: number): Observable<StatementLine[]> { return this.http.get<StatementLine[]>(`${this.api}/leases/${leaseId}/statement`); }
+
+  // Applications (candidatures)
+  getApplications(propertyId?: number): Observable<Application[]> {
+    let p = new HttpParams();
+    if (propertyId) p = p.set('propertyId', propertyId);
+    return this.http.get<Application[]>(`${this.api}/applications`, { params: p });
+  }
+  createApplication(a: Omit<Application, 'id' | 'status'>): Observable<Application> { return this.http.post<Application>(`${this.api}/applications`, a); }
+  updateApplicationStatus(id: number, status: string): Observable<Application> { return this.http.put<Application>(`${this.api}/applications/${id}/status`, { status }); }
+  deleteApplication(id: number): Observable<void> { return this.http.delete<void>(`${this.api}/applications/${id}`); }
 
   // Payments
   getPayments(params?: { leaseId?: number; status?: string }): Observable<Payment[]> {

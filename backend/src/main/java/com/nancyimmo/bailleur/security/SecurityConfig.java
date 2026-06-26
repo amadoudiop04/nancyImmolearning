@@ -1,7 +1,9 @@
 package com.nancyimmo.bailleur.security;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,6 +25,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
+    @Value("${app.cors.allowed-origins:http://localhost:4200}")
+    private String allowedOrigins;
+
     private final JwtAuthFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
 
@@ -39,9 +44,11 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints publics
-                        .requestMatchers("/", "/api/auth/**").permitAll()
+                        .requestMatchers("/", "/error", "/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/properties/available").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/dashboard").permitAll()
+                        // Un candidat peut déposer un dossier sans compte
+                        .requestMatchers(HttpMethod.POST, "/api/applications").permitAll()
                         // Permet les requêtes preflight CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Tout le reste nécessite une authentification
@@ -74,7 +81,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        // Origines lues depuis la config (env APP_CORS_ALLOWED_ORIGINS), séparées par des virgules.
+        config.setAllowedOrigins(Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(o -> !o.isEmpty())
+                .toList());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));

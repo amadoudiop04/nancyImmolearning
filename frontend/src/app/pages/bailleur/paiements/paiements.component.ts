@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Payment, PaymentStats, PropertyDetails, Tenant } from '../../../services/api.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-paiements',
@@ -105,7 +106,7 @@ export class PaiementsComponent implements OnInit {
   showForm = false;
   newPay: any = { status: 'PAID', amount: 0 };
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private toast: ToastService) {}
 
   ngOnInit() {
     this.load();
@@ -122,15 +123,23 @@ export class PaiementsComponent implements OnInit {
       next: () => {
         this.showForm = false;
         this.newPay = { status: 'PAID', amount: 0 };
+        this.toast.success('Paiement enregistré');
         this.load();
         this.api.getPaymentStats().subscribe({ next: s => this.payStats = s, error: () => {} });
       },
-      error: () => {}
+      error: () => this.toast.error('Impossible d\'enregistrer le paiement')
     });
   }
 
   deletePayment(id: number) {
-    this.api.deletePayment(id).subscribe({ next: () => this.load(), error: () => {} });
+    this.api.deletePayment(id).subscribe({
+      next: () => {
+        this.toast.success('Paiement supprimé');
+        this.load();
+        this.api.getPaymentStats().subscribe({ next: s => this.payStats = s, error: () => {} });
+      },
+      error: () => this.toast.error('Suppression impossible')
+    });
   }
 
   fmt(v?: number): string {

@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ToastComponent } from '../shared/toast.component';
+import { CookieConsentComponent } from '../shared/cookie-consent.component';
 
 @Component({
   selector: 'app-site-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, ToastComponent, CookieConsentComponent],
   template: `
     <div style="min-height:100vh;background:#F4F6F3;font-family:'Hanken Grotesk',sans-serif;">
 
@@ -58,6 +60,9 @@ import { AuthService } from '../services/auth.service';
       <main>
         <router-outlet />
       </main>
+
+      <app-toast />
+      <app-cookie-consent />
     </div>
 
     <style>

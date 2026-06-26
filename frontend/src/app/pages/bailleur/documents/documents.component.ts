@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService, Document, PropertyDetails, Tenant } from '../../../services/api.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-documents',
@@ -176,7 +177,7 @@ export class DocumentsComponent implements OnInit {
     { value: 'OTHER', label: 'Autres' },
   ];
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private toast: ToastService) {}
 
   get visibleDocuments(): Document[] {
     if (this.activeType === 'ALL') return this.documents;
@@ -199,13 +200,16 @@ export class DocumentsComponent implements OnInit {
 
   createDoc() {
     this.api.createDocument({ ...this.newDoc, createdAt: new Date().toISOString().slice(0, 10) } as any).subscribe({
-      next: () => { this.showForm = false; this.newDoc = { docType: 'OTHER' }; this.load(); },
-      error: () => {}
+      next: () => { this.showForm = false; this.newDoc = { docType: 'OTHER' }; this.toast.success('Document ajouté'); this.load(); },
+      error: () => this.toast.error('Impossible d\'ajouter le document')
     });
   }
 
   deleteDoc(id: number) {
-    this.api.deleteDocument(id).subscribe({ next: () => this.load(), error: () => {} });
+    this.api.deleteDocument(id).subscribe({
+      next: () => { this.toast.success('Document supprimé'); this.load(); },
+      error: () => this.toast.error('Suppression impossible')
+    });
   }
 
   typeLabel(t: string): string {

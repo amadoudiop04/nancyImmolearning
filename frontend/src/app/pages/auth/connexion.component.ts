@@ -21,7 +21,7 @@ import { AuthService } from '../../services/auth.service';
           <h2 style="font-size:38px;line-height:1.1;font-weight:800;letter-spacing:-0.02em;margin:0;">La gestion locative,<br>enfin entre vos mains.</h2>
           <p style="font-size:16px;color:#BFE0D9;line-height:1.6;margin:18px 0 0;max-width:380px;">Biens, locataires, paiements et quittances réunis dans une seule interface. Sans agence, sans commission.</p>
           <div style="display:flex;gap:28px;margin-top:34px;">
-            <div><div style="font-size:24px;font-weight:800;">2 500+</div><div style="font-size:13px;color:#7FC9BD;">biens gérés</div></div>
+            <div><div style="font-size:24px;font-weight:800;">15+</div><div style="font-size:13px;color:#7FC9BD;">biens gérés</div></div>
             <div><div style="font-size:24px;font-weight:800;">0%</div><div style="font-size:13px;color:#7FC9BD;">commission</div></div>
             <div><div style="font-size:24px;font-weight:800;">12 min</div><div style="font-size:13px;color:#7FC9BD;">pour démarrer</div></div>
           </div>
@@ -47,8 +47,19 @@ import { AuthService } from '../../services/auth.service';
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;">Mot de passe</label>
               <span style="font-size:12.5px;color:#2A9D8F;font-weight:600;cursor:pointer;">Oublié ?</span>
             </div>
-            <input [(ngModel)]="password" name="password" type="password" placeholder="••••••••" required
-              style="width:100%;padding:13px 14px;border:1px solid #D6DED9;border-radius:11px;font-family:inherit;font-size:14.5px;outline:none;background:#fff;">
+            <div style="position:relative;">
+              <input [(ngModel)]="password" name="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••" required
+                style="width:100%;padding:13px 44px 13px 14px;border:1px solid #D6DED9;border-radius:11px;font-family:inherit;font-size:14.5px;outline:none;background:#fff;">
+              <button type="button" (click)="showPassword = !showPassword"
+                [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:8px;display:flex;align-items:center;color:#9AA49E;">
+                @if (showPassword) {
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9.4 5.2A9.5 9.5 0 0 1 12 5c5 0 9 4.5 9 7 0 .9-.7 2.2-1.9 3.4M6.3 6.3C3.9 7.7 3 9.8 3 12c0 0 2.7 5 9 5 1.2 0 2.3-.2 3.2-.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                } @else {
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M3 12s3-7 9-7 9 7 9 7-3 7-9 7-9-7-9-7z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.7"/></svg>
+                }
+              </button>
+            </div>
 
             <label style="display:flex;align-items:center;gap:9px;margin-top:16px;font-size:13.5px;color:#5A655F;cursor:pointer;">
               <input [(ngModel)]="rememberMe" name="rememberMe" type="checkbox" style="width:16px;height:16px;accent-color:#0E4F4A;"> Rester connecté
@@ -85,6 +96,7 @@ import { AuthService } from '../../services/auth.service';
 export class ConnexionComponent {
   email = '';
   password = '';
+  showPassword = false;
   rememberMe = true;
   loading = false;
   error = '';

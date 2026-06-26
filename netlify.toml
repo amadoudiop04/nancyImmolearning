@@ -1,0 +1,21 @@
+# Déploiement du frontend Angular sur Netlify.
+# Le frontend vit dans le sous-dossier frontend/.
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist/frontend-app/browser"
+
+# Proxy : toute requête /api/* est relayée vers le backend Render.
+# => le navigateur ne fait que des appels same-origin : aucun problème de CORS.
+# ⚠️ Remplace l'URL ci-dessous par celle de TON backend Render une fois créé.
+[[redirects]]
+  from = "/api/*"
+  to = "https://REMPLACER-PAR-TON-BACKEND.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Fallback SPA : toutes les autres routes renvoient index.html (routing Angular).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

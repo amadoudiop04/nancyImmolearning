@@ -9,26 +9,31 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.nancyimmo.bailleur.models.UserModel;
-import com.nancyimmo.bailleur.repositories.UserRepository;
+import com.nancyimmo.bailleur.models.LandlordModel;
+import com.nancyimmo.bailleur.repositories.LandlordRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final LandlordRepository landlordRepository;
 
-    public CustomUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public CustomUserDetailsService(LandlordRepository landlordRepository) {
+        this.landlordRepository = landlordRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserModel user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable : " + email));
+        LandlordModel landlord = landlordRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Compte introuvable : " + email));
+
+        if (landlord.getPassword() == null) {
+            // Bailleur sans mot de passe (créé sans inscription) : pas de connexion possible.
+            throw new UsernameNotFoundException("Aucun mot de passe défini pour : " + email);
+        }
 
         return new User(
-                user.getEmail(),
-                user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
+                landlord.getEmail(),
+                landlord.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_BAILLEUR")));
     }
 }

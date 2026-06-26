@@ -8,6 +8,7 @@ import { BiensDetailComponent } from './pages/bailleur/bien-detail/bien-detail.c
 import { LocatairesComponent } from './pages/bailleur/locataires/locataires.component';
 import { PaiementsComponent } from './pages/bailleur/paiements/paiements.component';
 import { DocumentsComponent } from './pages/bailleur/documents/documents.component';
+import { CandidaturesComponent } from './pages/bailleur/candidatures/candidatures.component';
 import { LocataireComponent } from './pages/locataire/locataire.component';
 import { RechercheComponent } from './pages/recherche/recherche.component';
 import { ProfilComponent } from './pages/profil/profil.component';
@@ -30,6 +31,7 @@ export const routes: Routes = [
       { path: 'biens', component: BiensComponent },
       { path: 'biens/:id', component: BiensDetailComponent },
       { path: 'locataires', component: LocatairesComponent },
+      { path: 'candidatures', component: CandidaturesComponent },
       { path: 'paiements', component: PaiementsComponent },
       { path: 'documents', component: DocumentsComponent },
     ]
