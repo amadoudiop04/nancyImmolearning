@@ -2,13 +2,16 @@ package com.nancyimmo.bailleur.services;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import com.nancyimmo.bailleur.repositories.DocumentRepository;
 import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.TenantRepository;
 import com.nancyimmo.bailleur.security.CurrentUser;
 import com.nancyimmo.bailleur.dto.TenantDto;
+import com.nancyimmo.bailleur.models.LandlordModel;
 import com.nancyimmo.bailleur.models.TenantModel;
 import java.util.stream.Collectors;
 
@@ -30,11 +33,47 @@ public class TenantService {
         this.currentUser = currentUser;
     }
 
+    @Transactional
     public TenantDto create(TenantDto dto) {
+        LandlordModel landlord = currentUser.requireLandlord();
+        String email = dto.getEmail() != null ? dto.getEmail().trim().toLowerCase() : null;
+
+        // Si un locataire existe déjà pour cet email, on évite le doublon (contrainte d'unicité).
+        if (email != null && !email.isBlank()) {
+            TenantModel existing = tenantRepository.findByEmail(email).orElse(null);
+            if (existing != null) {
+                boolean ownedByOther = existing.getLandlord() != null
+                        && !landlord.getEmail().equalsIgnoreCase(existing.getLandlord().getEmail());
+                if (ownedByOther) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "Un locataire avec cet email existe déjà.");
+                }
+                // Locataire orphelin (auto-inscrit) ou déjà le mien : on le rattache et on met à jour.
+                existing.setLandlord(landlord);
+                applyEditableFields(existing, dto, email);
+                return toDto(tenantRepository.save(existing));
+            }
+        }
+
+        // Sinon, création normale rattachée au bailleur connecté.
         TenantModel model = toEntity(dto);
-        // Le locataire appartient au bailleur connecté.
-        model.setLandlord(currentUser.requireLandlord());
+        if (email != null) {
+            model.setEmail(email);
+        }
+        model.setLandlord(landlord);
         return toDto(tenantRepository.save(model));
+    }
+
+    /** Recopie les champs modifiables du DTO vers l'entité (sans toucher au mot de passe). */
+    private void applyEditableFields(TenantModel target, TenantDto dto, String normalizedEmail) {
+        if (dto.getFirstName() != null) target.setFirstName(dto.getFirstName());
+        if (dto.getLastName() != null) target.setLastName(dto.getLastName());
+        if (normalizedEmail != null) target.setEmail(normalizedEmail);
+        if (dto.getPhone() != null) target.setPhone(dto.getPhone());
+        if (dto.getStreet() != null) target.setStreet(dto.getStreet());
+        if (dto.getCity() != null) target.setCity(dto.getCity());
+        if (dto.getZipCode() != null) target.setZipCode(dto.getZipCode());
+        if (dto.getCountry() != null) target.setCountry(dto.getCountry());
     }
 
     public List<TenantDto> getAll() {

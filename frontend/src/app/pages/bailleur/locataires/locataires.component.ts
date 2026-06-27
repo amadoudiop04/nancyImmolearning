@@ -208,7 +208,7 @@ export class LocatairesComponent implements OnInit {
     { key: 'firstName', label: 'Prénom', placeholder: 'Thomas' },
     { key: 'lastName', label: 'Nom', placeholder: 'Martin' },
     { key: 'email', label: 'Email', placeholder: 'thomas.martin@email.fr' },
-    { key: 'phone', label: 'Téléphone', placeholder: '0600000000', type: 'number' },
+    { key: 'phone', label: 'Téléphone', placeholder: '0600000000', type: 'tel' },
     { key: 'street', label: 'Rue', placeholder: '12 avenue Foch' },
     { key: 'city', label: 'Ville', placeholder: 'Nancy' },
     { key: 'zipCode', label: 'Code postal', placeholder: '54000' },

@@ -11,4 +11,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TenantRepository extends JpaRepository<TenantModel, Long> {
     List<TenantModel> findByLandlord_Email(String email);
     Optional<TenantModel> findByIdAndLandlord_Email(Long id, String email);
+
+    // Authentification locataire
+    Optional<TenantModel> findByEmail(String email);
+    Optional<TenantModel> findByResetToken(String resetToken);
+    boolean existsByEmail(String email);
 }

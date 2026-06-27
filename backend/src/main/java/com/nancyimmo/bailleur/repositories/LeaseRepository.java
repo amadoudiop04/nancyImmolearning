@@ -15,4 +15,8 @@ public interface LeaseRepository extends JpaRepository<LeaseModel, Long> {
     // ─── Isolation par bailleur (via le bien) ─────────────────────────────────
     List<LeaseModel> findByProperty_Landlord_Email(String email);
     Optional<LeaseModel> findByIdAndProperty_Landlord_Email(Long id, String email);
+
+    // ─── Accès locataire (via le locataire du bail) ───────────────────────────
+    List<LeaseModel> findByTenant_Email(String email);
+    Optional<LeaseModel> findByIdAndTenant_Email(Long id, String email);
 }

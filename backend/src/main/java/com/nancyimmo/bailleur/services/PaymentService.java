@@ -57,15 +57,26 @@ public class PaymentService {
 
     // ─── Paiement en ligne (Stripe Checkout) ─────────────────────────────────
 
-    /** Crée une session Stripe Checkout et renvoie l'URL de paiement hébergée. */
+    /** Crée une session Stripe Checkout (côté bailleur) et renvoie l'URL de paiement hébergée. */
     public String createCheckout(Long leaseId, String periodStr) {
+        LeaseModel lease = leaseRepository.findByIdAndProperty_Landlord_Email(leaseId, currentUser.requireEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bail introuvable."));
+        return createCheckoutForLease(lease, periodStr);
+    }
+
+    /** Crée une session Stripe Checkout pour le locataire connecté (sur SON bail). */
+    public String createCheckoutAsTenant(Long leaseId, String periodStr) {
+        LeaseModel lease = leaseRepository.findByIdAndTenant_Email(leaseId, currentUser.requireEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bail introuvable."));
+        return createCheckoutForLease(lease, periodStr);
+    }
+
+    /** Partie commune : valide le bail puis crée la session Stripe. */
+    private String createCheckoutForLease(LeaseModel lease, String periodStr) {
         if (!stripeService.isConfigured()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "Paiement en ligne indisponible : Stripe non configuré (STRIPE_SECRET_KEY).");
         }
-        String email = currentUser.requireEmail();
-        LeaseModel lease = leaseRepository.findByIdAndProperty_Landlord_Email(leaseId, email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bail introuvable."));
         if (lease.getRentAmount() == null || lease.getRentAmount().signum() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Loyer non défini pour ce bail.");
         }
@@ -80,8 +91,17 @@ public class PaymentService {
         }
     }
 
-    /** Confirme une session après retour de Stripe : enregistre le paiement si réglé. */
+    /** Confirme une session après retour de Stripe (bailleur) : enregistre le paiement si réglé. */
     public PaymentDto confirmCheckout(String sessionId) {
+        return confirmCheckoutScoped(sessionId, false);
+    }
+
+    /** Confirme une session après retour de Stripe pour le locataire connecté. */
+    public PaymentDto confirmCheckoutAsTenant(String sessionId) {
+        return confirmCheckoutScoped(sessionId, true);
+    }
+
+    private PaymentDto confirmCheckoutScoped(String sessionId, boolean asTenant) {
         if (sessionId == null || sessionId.isBlank() || !stripeService.isConfigured()) {
             return null;
         }
@@ -93,7 +113,9 @@ public class PaymentService {
             }
             Long leaseId = Long.valueOf(session.getMetadata().get("leaseId"));
             YearMonth period = YearMonth.from(LocalDate.parse(session.getMetadata().get("period")));
-            LeaseModel lease = leaseRepository.findByIdAndProperty_Landlord_Email(leaseId, email).orElse(null);
+            LeaseModel lease = (asTenant
+                    ? leaseRepository.findByIdAndTenant_Email(leaseId, email)
+                    : leaseRepository.findByIdAndProperty_Landlord_Email(leaseId, email)).orElse(null);
             if (lease == null) {
                 return null;
             }

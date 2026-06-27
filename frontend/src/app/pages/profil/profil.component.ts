@@ -66,7 +66,7 @@ import { ToastService } from '../../services/toast.service';
                 </div>
                 <div>
                   <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Téléphone</label>
-                  <input [(ngModel)]="landlord.phone" type="number" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;color:#16201D;background:#fff;outline:none;">
+                  <input [(ngModel)]="landlord.phone" type="tel" style="width:100%;padding:11px 13px;border:1px solid #D6DED9;border-radius:10px;font-family:inherit;font-size:14px;color:#16201D;background:#fff;outline:none;">
                 </div>
                 <div>
                   <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Ville</label>

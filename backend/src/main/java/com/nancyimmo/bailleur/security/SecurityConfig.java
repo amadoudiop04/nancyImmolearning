@@ -53,7 +53,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/stripe/webhook").permitAll()
                         // Permet les requêtes preflight CORS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Tout le reste nécessite une authentification
+                        // Espace locataire : réservé au rôle LOCATAIRE (cloisonnement des accès).
+                        .requestMatchers("/api/portal/**").hasRole("LOCATAIRE")
+                        // Tout le reste nécessite une authentification (les services restreignent
+                        // déjà les données du bailleur au compte bailleur connecté).
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

@@ -1,5 +1,6 @@
 package com.nancyimmo.bailleur.controllers;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -13,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nancyimmo.bailleur.dto.auth.AuthResponse;
+import com.nancyimmo.bailleur.dto.auth.ForgotPasswordRequest;
 import com.nancyimmo.bailleur.dto.auth.LoginRequest;
 import com.nancyimmo.bailleur.dto.auth.RegisterRequest;
+import com.nancyimmo.bailleur.dto.auth.ResetPasswordRequest;
 import com.nancyimmo.bailleur.services.AuthService;
 
 @RestController
@@ -43,6 +46,32 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Email ou mot de passe incorrect."));
+        }
+    }
+
+    /**
+     * Demande de réinitialisation de mot de passe. En mode démo (pas d'envoi d'email), le jeton
+     * est renvoyé directement dans la réponse ({@code resetToken}) pour permettre la suite du flux.
+     * Le message reste générique afin de ne pas divulguer l'existence d'un compte.
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        String token = authService.forgotPassword(request.getEmail());
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", "Si un compte existe pour cet email, un lien de réinitialisation a été généré.");
+        if (token != null) {
+            body.put("resetToken", token);
+        }
+        return ResponseEntity.ok(body);
+    }
+
+    /** Réinitialise le mot de passe à partir d'un jeton valide et connecte directement l'utilisateur. */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            return ResponseEntity.ok(authService.resetPassword(request.getToken(), request.getNewPassword()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
     }
 

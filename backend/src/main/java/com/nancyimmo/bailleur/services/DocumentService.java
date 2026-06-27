@@ -5,7 +5,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,7 @@ import com.nancyimmo.bailleur.models.DocumentModel;
 import com.nancyimmo.bailleur.models.LandlordModel;
 import com.nancyimmo.bailleur.models.LeaseModel;
 import com.nancyimmo.bailleur.models.PropertyModel;
+import com.nancyimmo.bailleur.models.TenantModel;
 import com.nancyimmo.bailleur.repositories.DocumentRepository;
 import com.nancyimmo.bailleur.repositories.LeaseRepository;
 import com.nancyimmo.bailleur.repositories.PropertyRepository;
@@ -173,6 +176,49 @@ public class DocumentService {
     public DocumentModel getForDownload(Long id) {
         return documentRepository.findByIdAndLandlord_Email(id, currentUser.requireEmail())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document introuvable."));
+    }
+
+    // ─── Accès locataire ──────────────────────────────────────────────────────
+
+    /** Documents associés au(x) bien(s) loué(s) par le locataire connecté, ou à lui directement. */
+    public List<DocumentDto> findForCurrentTenant() {
+        TenantModel tenant = currentUser.requireTenant();
+        Set<Long> seen = new HashSet<>();
+        List<DocumentDto> out = new ArrayList<>();
+        for (LeaseModel lease : leaseRepository.findByTenant_Email(tenant.getEmail())) {
+            if (lease.getProperty() != null) {
+                for (DocumentModel d : documentRepository.findByPropertyId(lease.getProperty().getId())) {
+                    if (seen.add(d.getId())) {
+                        out.add(toDto(d));
+                    }
+                }
+            }
+        }
+        for (DocumentModel d : documentRepository.findByTenantId(tenant.getId())) {
+            if (seen.add(d.getId())) {
+                out.add(toDto(d));
+            }
+        }
+        return out;
+    }
+
+    /** Téléchargement d'un document par le locataire connecté (uniquement s'il le concerne). */
+    public DocumentModel getForDownloadAsTenant(Long id) {
+        TenantModel tenant = currentUser.requireTenant();
+        DocumentModel doc = documentRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document introuvable."));
+        boolean allowed = doc.getTenant() != null
+                && doc.getTenant().getId() != null
+                && doc.getTenant().getId().equals(tenant.getId());
+        if (!allowed && doc.getProperty() != null) {
+            allowed = leaseRepository.findByTenant_Email(tenant.getEmail()).stream()
+                    .anyMatch(l -> l.getProperty() != null
+                            && l.getProperty().getId().equals(doc.getProperty().getId()));
+        }
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document introuvable.");
+        }
+        return doc;
     }
 
     public DocumentDto create(DocumentDto dto) {

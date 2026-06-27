@@ -86,7 +86,7 @@ public class DataSeeder implements CommandLineRunner {
         nancy.setLastName("Aubert");
         nancy.setEmail("nancy@nancyimmo.fr");
         nancy.setPassword(passwordEncoder.encode("password123"));
-        nancy.setPhone(612345678);
+        nancy.setPhone("0612345678");
         nancy.setStreet("8 Rue de la Source");
         nancy.setCity("Nancy");
         nancy.setZipCode("54000");
@@ -99,11 +99,14 @@ public class DataSeeder implements CommandLineRunner {
         BuildingModel stanislas = building("Carré Stanislas", "4 Place Stanislas", "Nancy", "54000");
 
         // --- Locataires ---
-        TenantModel thomas = tenant("Thomas", "Bernard", "thomas.bernard@email.fr", 612001122,
+        TenantModel thomas = tenant("Thomas", "Bernard", "thomas.bernard@email.fr", "0612001122",
                 "12 Avenue Foch", "Nancy", "54000");
-        TenantModel camille = tenant("Camille", "Roussel", "camille.roussel@email.fr", 612003344,
+        // Compte locataire démo (accès à l'espace locataire) : thomas.bernard@email.fr / password123
+        thomas.setPassword(passwordEncoder.encode("password123"));
+        thomas = tenantRepository.save(thomas);
+        TenantModel camille = tenant("Camille", "Roussel", "camille.roussel@email.fr", "0612003344",
                 "18 Rue du Sergent Blandan", "Nancy", "54000");
-        TenantModel marie = tenant("Marie", "Lefebvre", "marie.lefebvre@email.fr", 612005566,
+        TenantModel marie = tenant("Marie", "Lefebvre", "marie.lefebvre@email.fr", "0612005566",
                 "9 Rue Carnot", "Nancy", "54000");
 
         // --- Biens occupés ---
@@ -158,7 +161,8 @@ public class DataSeeder implements CommandLineRunner {
         application(pVillers, "Karim", "Benali", "karim.benali@email.fr", "0698765432",
                 "Famille avec deux enfants, CDI, 3,5x le loyer en revenus.");
 
-        System.out.println("Données démo insérées (compte : nancy@nancyimmo.fr / password123).");
+        System.out.println("Données démo insérées — bailleur : nancy@nancyimmo.fr / password123 ; "
+                + "locataire : thomas.bernard@email.fr / password123.");
     }
 
     // ---- Helpers ----
@@ -174,7 +178,7 @@ public class DataSeeder implements CommandLineRunner {
         return buildingRepository.save(b);
     }
 
-    private TenantModel tenant(String first, String last, String email, int phone,
+    private TenantModel tenant(String first, String last, String email, String phone,
             String street, String city, String zip) {
         TenantModel t = new TenantModel();
         t.setFirstName(first);

@@ -8,7 +8,7 @@ export interface Building {
   id: number; name: string; street: string; city: string; zipCode: string; country: string;
 }
 export interface Landlord {
-  id: number; firstName: string; lastName: string; email: string; phone: number;
+  id: number; firstName: string; lastName: string; email: string; phone: string;
   street: string; city: string; zipCode: string; country: string;
 }
 export interface Property {
@@ -18,12 +18,12 @@ export interface Property {
 export interface PropertyDetails {
   id: number; name: string; size: string; kind: string; location: string; description?: string; imageUrl?: string; rent?: number;
   building?: { id: number; name: string; street: string; city: string; zipCode: string; country: string };
-  landlord?: { id: number; firstName: string; lastName: string; email: string; phone: number };
+  landlord?: { id: number; firstName: string; lastName: string; email: string; phone: string };
   lease?: { id: number; startDate: string; endDate: string; rentAmount: number; currency: string };
-  tenant?: { id: number; firstName: string; lastName: string; email: string; phone: number };
+  tenant?: { id: number; firstName: string; lastName: string; email: string; phone: string };
 }
 export interface Tenant {
-  id: number; firstName: string; lastName: string; email: string; phone: number;
+  id: number; firstName: string; lastName: string; email: string; phone: string;
   street: string; city: string; zipCode: string; country: string;
 }
 export interface Lease {
@@ -56,6 +56,9 @@ export interface DashboardStats {
 }
 export interface StatementLine {
   date: string; label: string; debit: number | null; credit: number | null; balance: number;
+}
+export interface DueMonth {
+  period: string; label: string; amount: number; status: 'LATE' | 'CURRENT' | string;
 }
 export interface Application {
   id: number; propertyId?: number; propertyName?: string;
@@ -156,6 +159,15 @@ export class ApiService {
   generateQuittance(leaseId: number, year: number, month: number): Observable<Document> { return this.http.post<Document>(`${this.api}/documents/generate-quittance`, { leaseId, year, month }); }
   uploadDocument(form: FormData): Observable<Document> { return this.http.post<Document>(`${this.api}/documents/upload`, form); }
   downloadDocument(id: number): Observable<Blob> { return this.http.get(`${this.api}/documents/${id}/download`, { responseType: 'blob' }); }
+
+  // Portail locataire (espace locataire, scopé sur le compte connecté)
+  getMyProperty(): Observable<PropertyDetails | null> { return this.http.get<PropertyDetails | null>(`${this.api}/portal/property`); }
+  getMyStatement(): Observable<StatementLine[]> { return this.http.get<StatementLine[]>(`${this.api}/portal/statement`); }
+  getMyDues(): Observable<DueMonth[]> { return this.http.get<DueMonth[]>(`${this.api}/portal/dues`); }
+  getMyDocuments(): Observable<Document[]> { return this.http.get<Document[]>(`${this.api}/portal/documents`); }
+  downloadMyDocument(id: number): Observable<Blob> { return this.http.get(`${this.api}/portal/documents/${id}/download`, { responseType: 'blob' }); }
+  createMyCheckout(period?: string): Observable<{ url: string }> { return this.http.post<{ url: string }>(`${this.api}/portal/checkout`, { period }); }
+  confirmMyCheckout(sessionId: string): Observable<Payment> { return this.http.post<Payment>(`${this.api}/portal/confirm`, { sessionId }); }
 
   // Dashboard
   getDashboardStats(): Observable<DashboardStats> { return this.http.get<DashboardStats>(`${this.api}/dashboard`); }

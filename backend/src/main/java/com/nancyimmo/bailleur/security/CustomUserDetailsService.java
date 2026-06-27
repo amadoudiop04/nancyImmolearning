@@ -10,30 +10,37 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.nancyimmo.bailleur.models.LandlordModel;
+import com.nancyimmo.bailleur.models.TenantModel;
 import com.nancyimmo.bailleur.repositories.LandlordRepository;
+import com.nancyimmo.bailleur.repositories.TenantRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final LandlordRepository landlordRepository;
+    private final TenantRepository tenantRepository;
 
-    public CustomUserDetailsService(LandlordRepository landlordRepository) {
+    public CustomUserDetailsService(LandlordRepository landlordRepository, TenantRepository tenantRepository) {
         this.landlordRepository = landlordRepository;
+        this.tenantRepository = tenantRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        LandlordModel landlord = landlordRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Compte introuvable : " + email));
-
-        if (landlord.getPassword() == null) {
-            // Bailleur sans mot de passe (créé sans inscription) : pas de connexion possible.
-            throw new UsernameNotFoundException("Aucun mot de passe défini pour : " + email);
+        // 1) On cherche d'abord un compte bailleur.
+        LandlordModel landlord = landlordRepository.findByEmail(email).orElse(null);
+        if (landlord != null && landlord.getPassword() != null) {
+            return new User(landlord.getEmail(), landlord.getPassword(),
+                    List.of(new SimpleGrantedAuthority("ROLE_BAILLEUR")));
         }
 
-        return new User(
-                landlord.getEmail(),
-                landlord.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_BAILLEUR")));
+        // 2) Sinon, un compte locataire.
+        TenantModel tenant = tenantRepository.findByEmail(email).orElse(null);
+        if (tenant != null && tenant.getPassword() != null) {
+            return new User(tenant.getEmail(), tenant.getPassword(),
+                    List.of(new SimpleGrantedAuthority("ROLE_LOCATAIRE")));
+        }
+
+        throw new UsernameNotFoundException("Identifiants invalides pour : " + email);
     }
 }

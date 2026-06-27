@@ -6,7 +6,7 @@ public class LandlordDto {
     private String firstName;
     private String lastName;
     private String email;
-    private int phone;
+    private String phone;
     private String street;
     private String city;
     private String zipCode;
@@ -15,7 +15,7 @@ public class LandlordDto {
     public LandlordDto() {
     }
 
-    public LandlordDto(Long id, String firstName, String lastName, String email, int phone, String street,
+    public LandlordDto(Long id, String firstName, String lastName, String email, String phone, String street,
             String city,
             String zipCode, String country) {
         this.id = id;
@@ -61,11 +61,11 @@ public class LandlordDto {
         this.email = email;
     }
 
-    public int getPhone() {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(int phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 

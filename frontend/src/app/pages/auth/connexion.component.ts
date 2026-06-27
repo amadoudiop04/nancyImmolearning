@@ -45,7 +45,7 @@ import { AuthService } from '../../services/auth.service';
 
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
               <label style="font-size:12.5px;font-weight:600;color:#5A655F;">Mot de passe</label>
-              <span style="font-size:12.5px;color:#2A9D8F;font-weight:600;cursor:pointer;">Oublié ?</span>
+              <span (click)="openReset()" style="font-size:12.5px;color:#2A9D8F;font-weight:600;cursor:pointer;">Oublié ?</span>
             </div>
             <div style="position:relative;">
               <input [(ngModel)]="password" name="password" [type]="showPassword ? 'text' : 'password'" placeholder="••••••••" required
@@ -90,6 +90,54 @@ import { AuthService } from '../../services/auth.service';
           </p>
         </div>
       </div>
+
+      <!-- Modale : mot de passe oublié -->
+      @if (showReset) {
+        <div (click)="closeReset()"
+          style="position:fixed;inset:0;background:rgba(14,40,37,0.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;">
+          <div (click)="$event.stopPropagation()"
+            style="background:#fff;border-radius:18px;width:100%;max-width:420px;padding:30px 30px 26px;box-shadow:0 24px 60px rgba(0,0,0,0.25);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9AA49E;">Réinitialisation</div>
+                <h2 style="margin:6px 0 0;font-size:21px;font-weight:800;letter-spacing:-0.02em;">Mot de passe oublié</h2>
+              </div>
+              <button type="button" (click)="closeReset()" aria-label="Fermer"
+                style="background:transparent;border:none;cursor:pointer;color:#9AA49E;font-size:22px;line-height:1;padding:2px 4px;">×</button>
+            </div>
+
+            @if (resetStep === 1) {
+              <p style="margin:12px 0 0;color:#5A655F;font-size:14px;line-height:1.5;">Entrez l'email de votre compte. Nous générons un lien de réinitialisation.</p>
+              <form (ngSubmit)="requestReset()" style="margin-top:18px;">
+                <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Email</label>
+                <input [(ngModel)]="resetEmail" name="resetEmail" type="email" placeholder="vous@email.fr" required
+                  style="width:100%;padding:13px 14px;border:1px solid #D6DED9;border-radius:11px;font-family:inherit;font-size:14.5px;outline:none;background:#fff;">
+                @if (resetMsg) { <p style="color:#2A7A6F;font-size:13px;margin:14px 0 0;">{{ resetMsg }}</p> }
+                @if (resetError) { <p style="color:#C2563B;font-size:13px;margin:14px 0 0;">{{ resetError }}</p> }
+                <button type="submit" [disabled]="resetLoading"
+                  style="margin-top:18px;width:100%;padding:13px;border:none;border-radius:12px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:700;font-size:14.5px;cursor:pointer;">
+                  {{ resetLoading ? 'Vérification…' : 'Continuer' }}
+                </button>
+              </form>
+            } @else {
+              <p style="margin:12px 0 0;color:#5A655F;font-size:14px;line-height:1.5;">Compte trouvé. Choisissez un nouveau mot de passe (6 caractères minimum).</p>
+              <form (ngSubmit)="confirmReset()" style="margin-top:18px;">
+                <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Nouveau mot de passe</label>
+                <input [(ngModel)]="resetNewPassword" name="resetNewPassword" type="password" placeholder="••••••••" required
+                  style="width:100%;padding:13px 14px;border:1px solid #D6DED9;border-radius:11px;font-family:inherit;font-size:14.5px;outline:none;background:#fff;margin-bottom:14px;">
+                <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Confirmer le mot de passe</label>
+                <input [(ngModel)]="resetConfirm" name="resetConfirm" type="password" placeholder="••••••••" required
+                  style="width:100%;padding:13px 14px;border:1px solid #D6DED9;border-radius:11px;font-family:inherit;font-size:14.5px;outline:none;background:#fff;">
+                @if (resetError) { <p style="color:#C2563B;font-size:13px;margin:14px 0 0;">{{ resetError }}</p> }
+                <button type="submit" [disabled]="resetLoading"
+                  style="margin-top:18px;width:100%;padding:13px;border:none;border-radius:12px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:700;font-size:14.5px;cursor:pointer;">
+                  {{ resetLoading ? 'Enregistrement…' : 'Réinitialiser et se connecter' }}
+                </button>
+              </form>
+            }
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -101,7 +149,82 @@ export class ConnexionComponent {
   loading = false;
   error = '';
 
+  // Flux « mot de passe oublié »
+  showReset = false;
+  resetStep = 1;
+  resetEmail = '';
+  resetToken = '';
+  resetNewPassword = '';
+  resetConfirm = '';
+  resetMsg = '';
+  resetError = '';
+  resetLoading = false;
+
   constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {}
+
+  openReset() {
+    this.showReset = true;
+    this.resetStep = 1;
+    this.resetEmail = this.email;
+    this.resetToken = '';
+    this.resetNewPassword = '';
+    this.resetConfirm = '';
+    this.resetMsg = '';
+    this.resetError = '';
+  }
+
+  closeReset() {
+    this.showReset = false;
+  }
+
+  requestReset() {
+    if (!this.resetEmail) {
+      this.resetError = 'Veuillez renseigner votre email.';
+      return;
+    }
+    this.resetLoading = true;
+    this.resetError = '';
+    this.resetMsg = '';
+    this.auth.forgotPassword(this.resetEmail.trim().toLowerCase()).subscribe({
+      next: (res) => {
+        this.resetLoading = false;
+        if (res.resetToken) {
+          this.resetToken = res.resetToken;
+          this.resetStep = 2;
+        } else {
+          this.resetMsg = res.message || "Si un compte existe, un lien a été généré.";
+        }
+      },
+      error: () => {
+        this.resetLoading = false;
+        this.resetError = "Une erreur est survenue. Veuillez réessayer.";
+      }
+    });
+  }
+
+  confirmReset() {
+    if (!this.resetNewPassword || this.resetNewPassword.length < 6) {
+      this.resetError = 'Mot de passe trop court (6 caractères minimum).';
+      return;
+    }
+    if (this.resetNewPassword !== this.resetConfirm) {
+      this.resetError = 'Les deux mots de passe ne correspondent pas.';
+      return;
+    }
+    this.resetLoading = true;
+    this.resetError = '';
+    this.auth.resetPassword(this.resetToken, this.resetNewPassword).subscribe({
+      next: (user) => {
+        this.resetLoading = false;
+        this.showReset = false;
+        this.router.navigate([user.role === 'LOCATAIRE' ? '/locataire' : '/bailleur']);
+      },
+      error: (err) => {
+        this.resetLoading = false;
+        this.resetError = err?.error?.message || 'Lien invalide ou expiré. Refaites une demande.';
+      }
+    });
+  }
 
   login() {
     if (!this.email || !this.password) {
