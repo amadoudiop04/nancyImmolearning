@@ -14,7 +14,7 @@ import { RechercheComponent } from './pages/recherche/recherche.component';
 import { ProfilComponent } from './pages/profil/profil.component';
 import { ConnexionComponent } from './pages/auth/connexion.component';
 import { InscriptionComponent } from './pages/auth/inscription.component';
-import { authGuard } from './services/auth.guard';
+import { roleGuard } from './services/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: AccueilComponent },
@@ -24,7 +24,7 @@ export const routes: Routes = [
   {
     path: 'bailleur',
     component: BailleurLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [roleGuard('BAILLEUR')],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
@@ -36,7 +36,7 @@ export const routes: Routes = [
       { path: 'documents', component: DocumentsComponent },
     ]
   },
-  { path: 'locataire', component: LocataireComponent, canActivate: [authGuard] },
-  { path: 'profil', component: ProfilComponent, canActivate: [authGuard] },
+  { path: 'locataire', component: LocataireComponent, canActivate: [roleGuard('LOCATAIRE')] },
+  { path: 'profil', component: ProfilComponent, canActivate: [roleGuard('BAILLEUR')] },
   { path: '**', redirectTo: '' }
 ];

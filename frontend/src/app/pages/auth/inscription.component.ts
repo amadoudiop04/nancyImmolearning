@@ -35,10 +35,28 @@ import { AuthService } from '../../services/auth.service';
       <div style="background:#F4F6F3;display:flex;align-items:center;justify-content:center;padding:48px 32px;">
         <div style="width:100%;max-width:400px;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:#9AA49E;">Bienvenue</div>
-          <h1 style="margin:8px 0 0;font-size:28px;font-weight:800;letter-spacing:-0.02em;">Créer un compte bailleur</h1>
-          <p style="margin:8px 0 0;color:#5A655F;font-size:14.5px;">Gérez vos biens sans agence, gratuitement.</p>
+          <h1 style="margin:8px 0 0;font-size:28px;font-weight:800;letter-spacing:-0.02em;">{{ form.role === 'LOCATAIRE' ? 'Créer un compte locataire' : 'Créer un compte bailleur' }}</h1>
+          <p style="margin:8px 0 0;color:#5A655F;font-size:14.5px;">{{ form.role === 'LOCATAIRE' ? 'Accédez à votre logement, vos documents et vos paiements.' : 'Gérez vos biens sans agence, gratuitement.' }}</p>
 
-          <form (ngSubmit)="register()" style="margin-top:22px;">
+          <!-- Type de compte -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;">
+            <button type="button" (click)="form.role = 'BAILLEUR'"
+              [style.border]="form.role === 'BAILLEUR' ? '2px solid #0E4F4A' : '1px solid #D6DED9'"
+              [style.background]="form.role === 'BAILLEUR' ? '#E7F1EF' : '#fff'"
+              style="padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-family:inherit;">
+              <div style="font-weight:700;font-size:14px;color:#16201D;">Bailleur</div>
+              <div style="font-size:11.5px;color:#5A655F;margin-top:2px;">Je gère mes biens</div>
+            </button>
+            <button type="button" (click)="form.role = 'LOCATAIRE'"
+              [style.border]="form.role === 'LOCATAIRE' ? '2px solid #0E4F4A' : '1px solid #D6DED9'"
+              [style.background]="form.role === 'LOCATAIRE' ? '#E7F1EF' : '#fff'"
+              style="padding:12px;border-radius:12px;cursor:pointer;text-align:left;font-family:inherit;">
+              <div style="font-weight:700;font-size:14px;color:#16201D;">Locataire</div>
+              <div style="font-size:11.5px;color:#5A655F;margin-top:2px;">J'accède à mon logement</div>
+            </button>
+          </div>
+
+          <form (ngSubmit)="register()" style="margin-top:18px;">
             <div class="nm-form" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
               <div>
                 <label style="font-size:12.5px;font-weight:600;color:#5A655F;margin-bottom:6px;display:block;">Prénom</label>

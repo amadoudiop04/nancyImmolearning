@@ -39,6 +39,15 @@ public class TenantModel {
     private String zipCode;
     private String country;
 
+    // Authentification : un locataire peut disposer d'un compte (mot de passe haché BCrypt).
+    private String password;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private java.time.Instant resetTokenExpiry;
+
     public Long getId() {
         return id;
     }
@@ -125,6 +134,30 @@ public class TenantModel {
 
     public void setLandlord(LandlordModel landlord) {
         this.landlord = landlord;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public java.time.Instant getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(java.time.Instant resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
     }
 
 }

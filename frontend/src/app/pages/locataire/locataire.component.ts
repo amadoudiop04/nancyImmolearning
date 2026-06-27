@@ -143,7 +143,7 @@ export class LocataireComponent implements OnInit {
     const lease = this.currentProperty?.lease;
     if (!lease) return;
     this.processing = true;
-    this.api.createCheckout(lease.id).subscribe({
+    this.api.createMyCheckout().subscribe({
       next: res => { window.location.href = res.url; },
       error: (e) => {
         this.processing = false;
@@ -159,13 +159,9 @@ export class LocataireComponent implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     const sessionId = params.get('session_id');
     if (params.get('paid') === '1' && sessionId) {
-      this.api.confirmCheckout(sessionId).subscribe({
+      this.api.confirmMyCheckout(sessionId).subscribe({
         next: () => {
           this.toast.success('Paiement reçu — votre quittance sera disponible.');
-          const leaseId = this.currentProperty?.lease?.id;
-          if (leaseId) {
-            this.api.getPayments({ leaseId }).subscribe({ next: p => this.payments = p, error: () => {} });
-          }
           this.loadStatement();
         },
         error: () => {}
@@ -182,21 +178,14 @@ export class LocataireComponent implements OnInit {
   }
 
   ngOnInit() {
-    const email = this.auth.user?.email?.toLowerCase();
-    this.api.getPropertyDetails().subscribe({
-      next: props => {
-        // Cible le logement du locataire connecté (par email), sinon le premier occupé.
-        this.currentProperty =
-          props.find(p => p.tenant?.email?.toLowerCase() === email)
-          ?? props.find(p => p.tenant != null)
-          ?? null;
+    // Espace locataire : on ne charge QUE les données du bien loué par le locataire connecté.
+    this.api.getMyProperty().subscribe({
+      next: property => {
+        this.currentProperty = property ?? null;
         if (this.currentProperty?.lease) {
-          this.api.getPayments({ leaseId: this.currentProperty.lease.id }).subscribe({ next: p => this.payments = p, error: () => {} });
           this.loadStatement();
         }
-        if (this.currentProperty) {
-          this.api.getDocuments({ propertyId: this.currentProperty.id }).subscribe({ next: d => this.documents = d, error: () => {} });
-        }
+        this.api.getMyDocuments().subscribe({ next: d => this.documents = d, error: () => {} });
         // Gère le retour de Stripe une fois le bien/bail chargé.
         this.handleStripeReturn();
       },
@@ -205,9 +194,7 @@ export class LocataireComponent implements OnInit {
   }
 
   loadStatement() {
-    const leaseId = this.currentProperty?.lease?.id;
-    if (!leaseId) return;
-    this.api.getStatement(leaseId).subscribe({
+    this.api.getMyStatement().subscribe({
       next: lines => {
         this.statement = lines;
         this.balance = lines.length ? lines[lines.length - 1].balance : 0;

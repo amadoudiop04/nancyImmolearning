@@ -50,6 +50,14 @@ public class LeaseService {
         // On ne révèle la situation de compte que pour les baux du bailleur connecté.
         LeaseModel lease = leaseRepository.findByIdAndProperty_Landlord_Email(leaseId, currentUser.requireEmail())
                 .orElse(null);
+        return buildStatement(lease);
+    }
+
+    /**
+     * Construit la situation de compte pour un bail déjà résolu (les contrôles d'accès — bailleur
+     * ou locataire — sont faits par l'appelant). Renvoie une liste vide si le bail est nul.
+     */
+    public List<StatementLineDto> buildStatement(LeaseModel lease) {
         if (lease == null) {
             return List.of();
         }
@@ -74,7 +82,7 @@ public class LeaseService {
         }
 
         // Crédits : les paiements encaissés (statut PAID).
-        for (PaymentModel p : paymentRepository.findByLeaseId(leaseId)) {
+        for (PaymentModel p : paymentRepository.findByLeaseId(lease.getId())) {
             if (p.getAmount() == null) {
                 continue;
             }

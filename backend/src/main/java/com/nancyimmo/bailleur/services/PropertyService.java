@@ -177,7 +177,8 @@ public class PropertyService {
         return model;
     }
 
-    private PropertyDetailsDto toDetailsDto(PropertyModel model) {
+    /** Mapping public (réutilisé par le portail locataire) d'un bien vers son DTO détaillé. */
+    public PropertyDetailsDto toDetailsDto(PropertyModel model) {
         PropertyDetailsDto dto = new PropertyDetailsDto();
         dto.setId(model.getId());
         dto.setName(model.getName());

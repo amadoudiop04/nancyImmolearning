@@ -36,6 +36,18 @@ export class AuthService {
     );
   }
 
+  /** Demande un lien de réinitialisation. En mode démo, le jeton est renvoyé dans la réponse. */
+  forgotPassword(email: string): Observable<{ message: string; resetToken?: string }> {
+    return this.http.post<{ message: string; resetToken?: string }>(`${this.api}/forgot-password`, { email });
+  }
+
+  /** Réinitialise le mot de passe via le jeton, puis connecte l'utilisateur (persiste le JWT). */
+  resetPassword(token: string, newPassword: string): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${this.api}/reset-password`, { token, newPassword }).pipe(
+      tap(res => this.persist(res))
+    );
+  }
+
   /** Rafraîchit les infos du compte connecté depuis le serveur (token sécurisé). */
   me(): Observable<AuthUser> {
     return this.http.get<AuthUser>(`${this.api}/me`).pipe(

@@ -32,6 +32,13 @@ public class LandlordModel {
     // Authentification : le bailleur EST le compte utilisateur (mot de passe haché BCrypt).
     private String password;
 
+    // Réinitialisation de mot de passe : jeton à usage unique + date d'expiration.
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private java.time.Instant resetTokenExpiry;
+
     public Long getId() {
         return id;
     }
@@ -110,6 +117,22 @@ public class LandlordModel {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public java.time.Instant getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(java.time.Instant resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
     }
 
 }

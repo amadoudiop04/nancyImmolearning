@@ -101,6 +101,9 @@ public class DataSeeder implements CommandLineRunner {
         // --- Locataires ---
         TenantModel thomas = tenant("Thomas", "Bernard", "thomas.bernard@email.fr", 612001122,
                 "12 Avenue Foch", "Nancy", "54000");
+        // Compte locataire démo (accès à l'espace locataire) : thomas.bernard@email.fr / password123
+        thomas.setPassword(passwordEncoder.encode("password123"));
+        thomas = tenantRepository.save(thomas);
         TenantModel camille = tenant("Camille", "Roussel", "camille.roussel@email.fr", 612003344,
                 "18 Rue du Sergent Blandan", "Nancy", "54000");
         TenantModel marie = tenant("Marie", "Lefebvre", "marie.lefebvre@email.fr", 612005566,
@@ -158,7 +161,8 @@ public class DataSeeder implements CommandLineRunner {
         application(pVillers, "Karim", "Benali", "karim.benali@email.fr", "0698765432",
                 "Famille avec deux enfants, CDI, 3,5x le loyer en revenus.");
 
-        System.out.println("Données démo insérées (compte : nancy@nancyimmo.fr / password123).");
+        System.out.println("Données démo insérées — bailleur : nancy@nancyimmo.fr / password123 ; "
+                + "locataire : thomas.bernard@email.fr / password123.");
     }
 
     // ---- Helpers ----

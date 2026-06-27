@@ -157,6 +157,14 @@ export class ApiService {
   uploadDocument(form: FormData): Observable<Document> { return this.http.post<Document>(`${this.api}/documents/upload`, form); }
   downloadDocument(id: number): Observable<Blob> { return this.http.get(`${this.api}/documents/${id}/download`, { responseType: 'blob' }); }
 
+  // Portail locataire (espace locataire, scopé sur le compte connecté)
+  getMyProperty(): Observable<PropertyDetails | null> { return this.http.get<PropertyDetails | null>(`${this.api}/portal/property`); }
+  getMyStatement(): Observable<StatementLine[]> { return this.http.get<StatementLine[]>(`${this.api}/portal/statement`); }
+  getMyDocuments(): Observable<Document[]> { return this.http.get<Document[]>(`${this.api}/portal/documents`); }
+  downloadMyDocument(id: number): Observable<Blob> { return this.http.get(`${this.api}/portal/documents/${id}/download`, { responseType: 'blob' }); }
+  createMyCheckout(period?: string): Observable<{ url: string }> { return this.http.post<{ url: string }>(`${this.api}/portal/checkout`, { period }); }
+  confirmMyCheckout(sessionId: string): Observable<Payment> { return this.http.post<Payment>(`${this.api}/portal/confirm`, { sessionId }); }
+
   // Dashboard
   getDashboardStats(): Observable<DashboardStats> { return this.http.get<DashboardStats>(`${this.api}/dashboard`); }
   getMyDashboardStats(): Observable<DashboardStats> { return this.http.get<DashboardStats>(`${this.api}/dashboard/me`); }

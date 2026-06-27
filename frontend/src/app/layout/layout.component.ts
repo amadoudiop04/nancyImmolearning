@@ -43,12 +43,18 @@ import { CookieConsentComponent } from '../shared/cookie-consent.component';
 
           <div class="nm-topactions" style="margin-left:auto;display:flex;align-items:center;gap:12px;">
             @if (user(); as u) {
-              <a routerLink="/bailleur/dashboard" title="Mon espace" class="nm-hide-sm"
+              <a [routerLink]="homeLink(u)" title="Mon espace" class="nm-hide-sm"
                 style="padding:8px 14px;border-radius:9px;font-size:13.5px;font-weight:600;text-decoration:none;color:#0E4F4A;background:#E7F1EF;">Mon espace</a>
-              <a routerLink="/profil" title="Mon profil"
-                style="width:36px;height:36px;border-radius:50%;background:#E7F1EF;color:#0E4F4A;
-                  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
-                  cursor:pointer;text-decoration:none;">{{ initials(u) }}</a>
+              @if (u.role !== 'LOCATAIRE') {
+                <a routerLink="/profil" title="Mon profil"
+                  style="width:36px;height:36px;border-radius:50%;background:#E7F1EF;color:#0E4F4A;
+                    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+                    cursor:pointer;text-decoration:none;">{{ initials(u) }}</a>
+              } @else {
+                <span title="Mon espace"
+                  style="width:36px;height:36px;border-radius:50%;background:#E7F1EF;color:#0E4F4A;
+                    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">{{ initials(u) }}</span>
+              }
               <button (click)="logout()" title="Se déconnecter"
                 style="display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid #E4C8C0;border-radius:9px;background:#fff;color:#C2563B;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 17l5-5-5-5M19 12H7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -90,6 +96,11 @@ export class SiteLayoutComponent {
 
   initials(u: { firstName: string; lastName: string }): string {
     return (u.firstName?.[0] ?? '') + (u.lastName?.[0] ?? '');
+  }
+
+  /** Lien "Mon espace" adapté au rôle du compte connecté. */
+  homeLink(u: { role: string }): string {
+    return u.role === 'LOCATAIRE' ? '/locataire' : '/bailleur/dashboard';
   }
 
   logout(): void {
