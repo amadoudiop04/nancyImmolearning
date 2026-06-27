@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nancyimmo.bailleur.dto.DocumentDto;
+import com.nancyimmo.bailleur.dto.DueMonthDto;
 import com.nancyimmo.bailleur.dto.PaymentDto;
 import com.nancyimmo.bailleur.dto.PropertyDetailsDto;
 import com.nancyimmo.bailleur.dto.StatementLineDto;
@@ -56,6 +57,12 @@ public class PortalController {
     @GetMapping("/statement")
     public List<StatementLineDto> myStatement() {
         return portalService.myStatement();
+    }
+
+    /** Mois impayés (arriérés en retard + mois courant) à régler par le locataire connecté. */
+    @GetMapping("/dues")
+    public List<DueMonthDto> myDues() {
+        return portalService.myDues();
     }
 
     /** Documents associés au bien loué par le locataire connecté. */

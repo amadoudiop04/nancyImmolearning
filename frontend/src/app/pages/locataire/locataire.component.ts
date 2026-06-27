@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ApiService, PropertyDetails, Payment, Document, StatementLine } from '../../services/api.service';
+import { ApiService, PropertyDetails, Payment, Document, StatementLine, DueMonth } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 
@@ -31,15 +31,44 @@ import { ToastService } from '../../services/toast.service';
               </div>
               <span style="background:#E9C46A;color:#3A2E10;font-weight:700;font-size:12px;padding:6px 13px;border-radius:999px;">À régler</span>
             </div>
-            <button (click)="startCheckout()" [disabled]="!currentProperty?.lease || processing"
-              style="margin-top:22px;width:100%;padding:14px;border:none;border-radius:12px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <button (click)="startCheckout()" [disabled]="!currentProperty?.lease || processing || lateDues.length > 0"
+              [style.opacity]="lateDues.length > 0 ? '0.55' : '1'"
+              [style.cursor]="lateDues.length > 0 ? 'not-allowed' : 'pointer'"
+              style="margin-top:22px;width:100%;padding:14px;border:none;border-radius:12px;background:#2A9D8F;color:#fff;font-family:inherit;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;">
               @if (processing) { <span>Redirection vers le paiement…</span> } @else {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 11V8a6 6 0 0 1 12 0v3" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" stroke-width="1.8"/></svg>
-                <span>Payer en ligne par carte →</span>
+                <span>Payer le mois courant →</span>
               }
             </button>
-            <div style="margin-top:10px;font-size:11.5px;color:#BFE0D9;text-align:center;">🔒 Paiement sécurisé par Stripe</div>
+            @if (lateDues.length > 0) {
+              <div style="margin-top:10px;font-size:11.5px;color:#FBD9A0;text-align:center;">⚠️ Régularisez d'abord les {{ lateDues.length }} mois en retard ci-dessous.</div>
+            } @else {
+              <div style="margin-top:10px;font-size:11.5px;color:#BFE0D9;text-align:center;">🔒 Paiement sécurisé par Stripe</div>
+            }
           </div>
+
+          <!-- Mois en retard à régulariser -->
+          @if (lateDues.length > 0) {
+            <div style="background:#fff;border:1px solid #F0D2C6;border-radius:16px;padding:22px;margin-top:18px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div style="font-size:16px;font-weight:700;color:#C2563B;">Mois en retard à régulariser</div>
+                <span style="background:#FBE7DF;color:#C2563B;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;">Total : {{ fmt(lateTotal) }}</span>
+              </div>
+              <p style="margin:0 0 14px;font-size:12.5px;color:#8A938E;">Réglez les mois les plus anciens en premier pour solder votre retard.</p>
+              @for (d of lateDues; track d.period) {
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #F2F4F0;">
+                  <div>
+                    <div style="font-size:14px;font-weight:600;">{{ d.label }}</div>
+                    <div style="font-size:12px;color:#C2563B;">En retard · {{ fmt(d.amount) }}</div>
+                  </div>
+                  <button (click)="startCheckout(d.period)" [disabled]="processing"
+                    style="padding:9px 16px;border:none;border-radius:10px;background:#0E4F4A;color:#fff;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;">
+                    Régulariser →
+                  </button>
+                </div>
+              }
+            </div>
+          }
 
           <!-- Situation de compte (débit / crédit / solde) -->
           <div style="background:#fff;border:1px solid #E4E7E2;border-radius:16px;padding:22px;margin-top:18px;">
@@ -120,9 +149,20 @@ export class LocataireComponent implements OnInit {
   payments: Payment[] = [];
   documents: Document[] = [];
   statement: StatementLine[] = [];
+  dues: DueMonth[] = [];
   balance = 0;
 
   processing = false;
+
+  /** Mois en retard (arriérés) à régulariser avant le mois courant. */
+  get lateDues(): DueMonth[] {
+    return this.dues.filter(d => d.status === 'LATE');
+  }
+
+  /** Montant total des arriérés en retard. */
+  get lateTotal(): number {
+    return this.lateDues.reduce((sum, d) => sum + (d.amount ?? 0), 0);
+  }
 
   constructor(
     private api: ApiService,
@@ -138,12 +178,12 @@ export class LocataireComponent implements OnInit {
     return [u.firstName, u.lastName].filter(Boolean).join(' ');
   }
 
-  /** Démarre le paiement Stripe Checkout : crée la session puis redirige. */
-  startCheckout() {
+  /** Démarre le paiement Stripe Checkout (mois courant par défaut, ou un mois précis à régulariser). */
+  startCheckout(period?: string) {
     const lease = this.currentProperty?.lease;
     if (!lease) return;
     this.processing = true;
-    this.api.createMyCheckout().subscribe({
+    this.api.createMyCheckout(period).subscribe({
       next: res => { window.location.href = res.url; },
       error: (e) => {
         this.processing = false;
@@ -163,6 +203,7 @@ export class LocataireComponent implements OnInit {
         next: () => {
           this.toast.success('Paiement reçu — votre quittance sera disponible.');
           this.loadStatement();
+          this.loadDues();
         },
         error: () => {}
       });
@@ -184,6 +225,7 @@ export class LocataireComponent implements OnInit {
         this.currentProperty = property ?? null;
         if (this.currentProperty?.lease) {
           this.loadStatement();
+          this.loadDues();
         }
         this.api.getMyDocuments().subscribe({ next: d => this.documents = d, error: () => {} });
         // Gère le retour de Stripe une fois le bien/bail chargé.
@@ -199,6 +241,13 @@ export class LocataireComponent implements OnInit {
         this.statement = lines;
         this.balance = lines.length ? lines[lines.length - 1].balance : 0;
       },
+      error: () => {}
+    });
+  }
+
+  loadDues() {
+    this.api.getMyDues().subscribe({
+      next: dues => this.dues = dues,
       error: () => {}
     });
   }
