@@ -167,7 +167,7 @@ import { ToastService } from '../../../services/toast.service';
         }
       </div>
 
-      <div class="nm-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+      <div class="nm-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">
         @for (d of visibleDocuments; track d.id) {
           <div style="background:#fff;border:1px solid #E4E7E2;border-radius:14px;padding:18px;display:flex;gap:13px;align-items:center;">
             <div style="width:40px;height:40px;border-radius:10px;background:#E7F1EF;color:#0E4F4A;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;flex:none;">
